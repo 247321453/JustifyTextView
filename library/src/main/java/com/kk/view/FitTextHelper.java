@@ -144,25 +144,12 @@ public class FitTextHelper {
     private boolean isFit(CharSequence text, TextPaint paint) {
         // 自动换行
         boolean mSingleLine = isSingleLine(textView);
-        int maxLines;
-        float multi;
-        float space = 0f;
-        if (textView instanceof FitTextView) {
-            FitTextView fitTextView = (FitTextView) textView;
-            multi = fitTextView.getLineSpacingMultiplierCompat();
-            maxLines = fitTextView.getMaxLinesCompat();
-            space = fitTextView.getLineSpacingExtraCompat();
-        } else if (Build.VERSION.SDK_INT <= 16) {
-            multi = 1.0f;
-            maxLines = Integer.MAX_VALUE;
-            space = 0;
-        } else {
-            multi = textView.getLineSpacingMultiplier();
-            maxLines = textView.getMaxLines();
-            space = textView.getLineSpacingExtra();
-        }
+        int maxLines= textView.getMaxLinesCompat();
+        float multi = textView.getLineSpacingMultiplierCompat();
+        float space  = textView.getLineSpacingExtraCompat();
+
         if (multi > 1.0) {
-            space += ((float) paint.getFontMetricsInt(null)) * (multi - 10.f);
+            space += ((float) paint.getFontMetricsInt(null)) * (multi - 1.0f);
         }
         int height = textView.getTextHeight();
         if (LastNoSpace && !mSingleLine) {

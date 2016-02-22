@@ -166,17 +166,14 @@ class BaseTextView extends TextView {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if(!mJustify){
+        if (!mJustify || mSingleLine) {
             super.onDraw(canvas);
             return;
         }
         TextPaint paint = getPaint();
-        paint.setColor(getCurrentTextColor());
         paint.drawableState = getDrawableState();
         int mViewWidth = getTextWidth();
         CharSequence text = getText();
-        int mLineY = 0;
-        mLineY += getTextSize();
         Layout layout = getLayout();
         if (layout == null) {
             layout = FitTextHelper.getStaticLayout(this, getText(), getPaint());
@@ -185,7 +182,13 @@ class BaseTextView extends TextView {
         for (int i = 0; i < count; i++) {
             int lineStart = layout.getLineStart(i);
             int lineEnd = layout.getLineEnd(i);
+//            int top = layout.getLineTop(i);
+            float x = layout.getLineLeft(i);
+            int mLineY = layout.getTopPadding() + (i+1) * getLineHeight();
             CharSequence line = text.subSequence(lineStart, lineEnd);
+            if (line.length() == 0) {
+                continue;
+            }
             if (LineNoSpace) {
                 if (TextUtils.equals(line.subSequence(line.length() - 1, line.length()), " ")) {
                     line = line.subSequence(0, line.length() - 1);
@@ -203,9 +206,9 @@ class BaseTextView extends TextView {
 //            } else {
 //                canvas.drawText(line, 0, line.length(), 0, mLineY, paint);
 //            }
+//            float x = getCompoundPaddingLeft();
             if (needScale) {
 //                float sc = mViewWidth / lineWidth;
-                float x = getCompoundPaddingLeft();
                 //标点数
                 int clen = countEmpty(line);
                 float d = (mViewWidth - lineWidth) / clen;
@@ -219,9 +222,8 @@ class BaseTextView extends TextView {
                     }
                 }
             } else {
-                canvas.drawText(line, 0, line.length(), 0, mLineY, paint);
+                canvas.drawText(line, 0, line.length(), x, mLineY, paint);
             }
-            mLineY += getLineHeight();
         }
     }
 

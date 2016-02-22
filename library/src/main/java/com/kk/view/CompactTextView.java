@@ -27,16 +27,6 @@ public class CompactTextView extends BaseTextView {
     }
 
     @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-        if (widthMode != MeasureSpec.UNSPECIFIED) {
-            mNeedScaleText = true;
-            setText(getText());
-        }
-    }
-
-    @Override
     public void setText(CharSequence text, BufferType type) {
         if (text != null && mNeedScaleText && mSingleLine) {
             // 单行，并且设置宽度
