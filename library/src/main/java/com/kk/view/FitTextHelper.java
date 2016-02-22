@@ -1,7 +1,6 @@
 package com.kk.view;
 
 import android.annotation.TargetApi;
-import android.graphics.Paint;
 import android.os.Build;
 import android.text.Layout;
 import android.text.SpannableStringBuilder;
@@ -94,18 +93,18 @@ public class FitTextHelper {
         return (type & EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE) == EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
     }
 
-    public float getLineHieght() {
-        Paint.FontMetrics fm = textView.getPaint().getFontMetrics();
-        float baseline = fm.descent - fm.ascent;
-        float multi = textView.getLineSpacingMultiplierCompat();
-        float space = textView.getLineSpacingExtraCompat();
-        //字距
-        return (baseline + fm.leading)
-                * multi + space;
-    }
+//    public float getLineHieght() {
+//        Paint.FontMetrics fm = textView.getPaint().getFontMetrics();
+//        float baseline = fm.descent - fm.ascent;
+//        float multi = textView.getLineSpacingMultiplierCompat();
+//        float space = textView.getLineSpacingExtraCompat();
+//        //字距
+//        return (baseline + fm.leading)
+//                * multi + space;
+//    }
 
     private int getMaxLineCount() {
-        float vspace = getLineHieght();
+        float vspace = textView.getLineHeight();
         float height = textView.getTextHeight();
         return (int) (height / vspace);
     }

@@ -198,13 +198,14 @@ class BaseTextView extends TextView {
             if (needScale) {
 //                float sc = mViewWidth / lineWidth;
                 float x = getCompoundPaddingLeft();
+                //标点数
                 int clen = countEmpty(line);
                 float d = (mViewWidth - lineWidth) / clen;
                 for (int j = 0; j < line.length(); j++) {
                     float cw = getPaint().measureText(line, j, j + 1);
                     canvas.drawText(line, j, j + 1, x, mLineY, getPaint());
                     x += cw;
-                    //TODO 是标点
+                    // 是标点
                     if (isEmpty(line, j, j + 1)) {
                         x += d;
                     }
