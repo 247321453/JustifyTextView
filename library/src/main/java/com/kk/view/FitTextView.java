@@ -6,7 +6,7 @@ import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 
-public class FitTextView extends BaseTextView {
+public class FitTextView extends CompactTextView {
     /***
      * 不拆分单词
      */

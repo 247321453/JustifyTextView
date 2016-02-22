@@ -46,7 +46,6 @@ public class FitTextHelper {
         sSpcaeList.add("。");
         sSpcaeList.add("？");
         sSpcaeList.add("！");
-        sSpcaeList.add(" ");
         sSpcaeList.add("[");
         sSpcaeList.add("]");
         sSpcaeList.add("@");

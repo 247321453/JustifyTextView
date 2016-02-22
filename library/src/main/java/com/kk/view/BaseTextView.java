@@ -24,6 +24,7 @@ class BaseTextView extends TextView {
     private static final int MAX_LINES = 3;
     private static final int SINGLE_LINE = 4;
     protected boolean LineNoSpace = true;
+    protected boolean mJustify = true;
 
     @SuppressWarnings("deprecation")
     private static final int[] ANDROID_ATTRS = new int[]{
@@ -165,6 +166,10 @@ class BaseTextView extends TextView {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        if(!mJustify){
+            super.onDraw(canvas);
+            return;
+        }
         TextPaint paint = getPaint();
         paint.setColor(getCurrentTextColor());
         paint.drawableState = getDrawableState();
@@ -174,7 +179,7 @@ class BaseTextView extends TextView {
         mLineY += getTextSize();
         Layout layout = getLayout();
         if (layout == null) {
-            layout=FitTextHelper.getStaticLayout(this, getText(), getPaint());
+            layout = FitTextHelper.getStaticLayout(this, getText(), getPaint());
         }
         int count = layout.getLineCount();
         for (int i = 0; i < count; i++) {
@@ -184,6 +189,9 @@ class BaseTextView extends TextView {
             if (LineNoSpace) {
                 if (TextUtils.equals(line.subSequence(line.length() - 1, line.length()), " ")) {
                     line = line.subSequence(0, line.length() - 1);
+                }
+                if (TextUtils.equals(line.subSequence(0, 1), " ")) {
+                    line = line.subSequence(1, line.length() - 1);
                 }
             }
             float lineWidth = getPaint().measureText(text, lineStart, lineEnd);
@@ -230,7 +238,7 @@ class BaseTextView extends TextView {
 
     protected boolean isEmpty(CharSequence c, int start, int end) {
         CharSequence ch = c.subSequence(start, end);
-        return FitTextHelper.sSpcaeList.contains(ch);
+        return TextUtils.equals(ch, " ") || FitTextHelper.sSpcaeList.contains(ch);
     }
 
 //    private void drawScaledText(Canvas canvas, int mViewWidth, int mLineY, int lineStart, CharSequence line, float lineWidth) {
