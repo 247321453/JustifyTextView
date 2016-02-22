@@ -3,7 +3,11 @@ package com.kk.view;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Canvas;
 import android.os.Build;
+import android.text.Layout;
+import android.text.TextPaint;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
@@ -19,6 +23,7 @@ class BaseTextView extends TextView {
     private static final int LINE_SPACING_EXTRA = 2;
     private static final int MAX_LINES = 3;
     private static final int SINGLE_LINE = 4;
+    protected boolean LineNoSpace = true;
 
     @SuppressWarnings("deprecation")
     private static final int[] ANDROID_ATTRS = new int[]{
@@ -56,6 +61,13 @@ class BaseTextView extends TextView {
         }
     }
 
+    public boolean isLineNoSpace() {
+        return LineNoSpace;
+    }
+
+    public void setLineNoSpace(boolean lineNoSpace) {
+        LineNoSpace = lineNoSpace;
+    }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     public boolean getIncludeFontPaddingCompat() {
@@ -149,4 +161,103 @@ class BaseTextView extends TextView {
     public float getOriginalTextSize() {
         return mOriginalTextSize;
     }
+
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        TextPaint paint = getPaint();
+        paint.setColor(getCurrentTextColor());
+        paint.drawableState = getDrawableState();
+        int mViewWidth = getTextWidth();
+        CharSequence text = getText();
+        int mLineY = 0;
+        mLineY += getTextSize();
+        Layout layout = getLayout();
+        if (layout == null) {
+            layout=FitTextHelper.getStaticLayout(this, getText(), getPaint());
+        }
+        int count = layout.getLineCount();
+        for (int i = 0; i < count; i++) {
+            int lineStart = layout.getLineStart(i);
+            int lineEnd = layout.getLineEnd(i);
+            CharSequence line = text.subSequence(lineStart, lineEnd);
+            if (LineNoSpace) {
+                if (TextUtils.equals(line.subSequence(line.length() - 1, line.length()), " ")) {
+                    line = line.subSequence(0, line.length() - 1);
+                }
+            }
+            float lineWidth = getPaint().measureText(text, lineStart, lineEnd);
+            boolean needScale = i < (count - 1) && (needScale(text.subSequence(lineEnd - 1, lineEnd)));
+//            if (i < (count - 1) && needScale(line)) {
+
+            //float width = StaticLayout.getDesiredWidth(text, lineStart, lineEnd, getPaint());
+//                drawScaledText(canvas, mViewWidth, mLineY, lineStart, line, width - getCompoundPaddingLeft() - getCompoundPaddingRight());
+//            } else {
+//                canvas.drawText(line, 0, line.length(), 0, mLineY, paint);
+//            }
+            if (needScale) {
+//                float sc = mViewWidth / lineWidth;
+                float x = getCompoundPaddingLeft();
+                int clen = countEmpty(line);
+                float d = (mViewWidth - lineWidth) / clen;
+                for (int j = 0; j < line.length(); j++) {
+                    float cw = getPaint().measureText(line, j, j + 1);
+                    canvas.drawText(line, j, j + 1, x, mLineY, getPaint());
+                    x += cw;
+                    //TODO 是标点
+                    if (isEmpty(line, j, j + 1)) {
+                        x += d;
+                    }
+                }
+            } else {
+                canvas.drawText(line, 0, line.length(), 0, mLineY, paint);
+            }
+            mLineY += getLineHeight();
+        }
+    }
+
+    protected int countEmpty(CharSequence text) {
+        int len = text.length();
+        int count = 0;
+        for (int i = 0; i < len; i++) {
+            if (isEmpty(text, i, i + 1)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    protected boolean isEmpty(CharSequence c, int start, int end) {
+        CharSequence ch = c.subSequence(start, end);
+        return FitTextHelper.sSpcaeList.contains(ch);
+    }
+
+//    private void drawScaledText(Canvas canvas, int mViewWidth, int mLineY, int lineStart, CharSequence line, float lineWidth) {
+//        float x = 0;
+//        if (isFirstLineOfParagraph(lineStart, line)) {
+//            String blanks = "  ";
+//            canvas.drawText(blanks, x, mLineY, getPaint());
+//            float bw = StaticLayout.getDesiredWidth(blanks, getPaint());
+//            x += bw;
+//
+//            line = line.subSequence(3, line.length() - 3);
+//        }
+//
+//        float d = (mViewWidth - lineWidth) / line.length() - 1;
+//        for (int i = 0; i < line.length(); i++) {
+//            String c = String.valueOf(line.charAt(i));
+//            float cw = StaticLayout.getDesiredWidth(c, getPaint());
+//            canvas.drawText(c, x, mLineY, getPaint());
+//            x += cw + d;
+//        }
+//    }
+//
+//    private boolean isFirstLineOfParagraph(int lineStart, CharSequence line) {
+//        return line.length() > 3 && line.charAt(0) == ' ' && line.charAt(1) == ' ';
+//    }
+
+    private boolean needScale(CharSequence end) {
+        return TextUtils.equals(end, " ");// || !TextUtils.equals(end, "\n");
+    }
+
 }

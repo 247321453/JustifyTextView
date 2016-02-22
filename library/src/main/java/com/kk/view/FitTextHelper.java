@@ -12,54 +12,59 @@ import android.view.Gravity;
 import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
+/***
+ * 两端对齐
+ * 标点句尾
+ */
 public class FitTextHelper {
     protected static final float LIMIT = 0.05f;// 误差
     private static final boolean LastNoSpace = false;
     protected FitTextView textView;
 
     //region space list
-//    public final static List<CharSequence> sSpcaeList = new ArrayList<>();
-//
-//    static {
-//        sSpcaeList.add(",");
-//        sSpcaeList.add(".");
-//        sSpcaeList.add(";");
-//        sSpcaeList.add("'");
-//        sSpcaeList.add("\"");
-//        sSpcaeList.add(":");
-//        sSpcaeList.add("?");
-//        sSpcaeList.add("~");
-//        sSpcaeList.add("!");
-//        sSpcaeList.add("‘");
-//        sSpcaeList.add("’");
-//        sSpcaeList.add("”");
-//        sSpcaeList.add("“");
-//        sSpcaeList.add("；");
-//        sSpcaeList.add("：");
-//        sSpcaeList.add("，");
-//        sSpcaeList.add("。");
-//        sSpcaeList.add("？");
-//        sSpcaeList.add("！");
-//        sSpcaeList.add(" ");
-//        sSpcaeList.add("[");
-//        sSpcaeList.add("]");
-//        sSpcaeList.add("@");
-//        sSpcaeList.add("#");
-//        sSpcaeList.add("$");
-//        sSpcaeList.add("%");
-//        sSpcaeList.add("^");
-//        sSpcaeList.add("&");
-//        sSpcaeList.add("*");
+    public final static List<CharSequence> sSpcaeList = new ArrayList<>();
+
+    static {
+        sSpcaeList.add(",");
+        sSpcaeList.add(".");
+        sSpcaeList.add(";");
+        sSpcaeList.add("'");
+        sSpcaeList.add("\"");
+        sSpcaeList.add(":");
+        sSpcaeList.add("?");
+        sSpcaeList.add("~");
+        sSpcaeList.add("!");
+        sSpcaeList.add("‘");
+        sSpcaeList.add("’");
+        sSpcaeList.add("”");
+        sSpcaeList.add("“");
+        sSpcaeList.add("；");
+        sSpcaeList.add("：");
+        sSpcaeList.add("，");
+        sSpcaeList.add("。");
+        sSpcaeList.add("？");
+        sSpcaeList.add("！");
+        sSpcaeList.add(" ");
+        sSpcaeList.add("[");
+        sSpcaeList.add("]");
+        sSpcaeList.add("@");
+        sSpcaeList.add("#");
+        sSpcaeList.add("$");
+        sSpcaeList.add("%");
+        sSpcaeList.add("^");
+        sSpcaeList.add("&");
+        sSpcaeList.add("*");
 //        sSpcaeList.add("{");
 //        sSpcaeList.add("}");
-//        sSpcaeList.add("<");
-//        sSpcaeList.add(">");
-//        sSpcaeList.add("/");
-//        sSpcaeList.add("\\");
-//        sSpcaeList.add("+");
-//        sSpcaeList.add("-");
+        sSpcaeList.add("<");
+        sSpcaeList.add(">");
+        sSpcaeList.add("/");
+        sSpcaeList.add("\\");
+        sSpcaeList.add("+");
+        sSpcaeList.add("-");
 //        sSpcaeList.add("·");
 //        sSpcaeList.add("●");
 //        sSpcaeList.add("【");
@@ -69,7 +74,7 @@ public class FitTextHelper {
 //        sSpcaeList.add("『");
 //        sSpcaeList.add("』");
 //        sSpcaeList.add("／");
-//    }
+    }
     //endregion
 
     protected volatile boolean mFittingText = false;
@@ -105,24 +110,31 @@ public class FitTextHelper {
         return (int) (height / vspace);
     }
 
-//
+    //
 //    protected boolean isSingle(TextView textView) {
 //        int inputType = textView.getInputType();
 //        return (inputType & EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE) == EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
 //    }
+    public static int getTextWidth(TextView textView) {
+        return textView.getMeasuredWidth() - textView.getCompoundPaddingLeft()
+                - textView.getCompoundPaddingRight();
+    }
+    public StaticLayout getStaticLayout(CharSequence text, TextPaint paint) {
+        return getStaticLayout(textView, text, paint);
+    }
 
-    private StaticLayout getStaticLayout(CharSequence text, TextPaint paint) {
+    public static StaticLayout getStaticLayout(TextView textView, CharSequence text, TextPaint paint) {
         if (textView instanceof FitTextView) {
             FitTextView fitTextView = (FitTextView) textView;
-            return new StaticLayout(text, paint, textView.getTextWidth(),
+            return new StaticLayout(text, paint, getTextWidth(textView),
                     getLayoutAlignment(fitTextView), fitTextView.getLineSpacingMultiplierCompat(),
                     fitTextView.getLineSpacingExtraCompat(), fitTextView.getIncludeFontPaddingCompat());
         } else {
             if (Build.VERSION.SDK_INT <= 16) {
-                return new StaticLayout(text, paint, textView.getTextWidth(),
+                return new StaticLayout(text, paint, getTextWidth(textView),
                         getLayoutAlignment(textView), 0, 0, false);
             }
-            return new StaticLayout(text, paint, textView.getTextWidth(),
+            return new StaticLayout(text, paint, getTextWidth(textView),
                     getLayoutAlignment(textView), textView.getLineSpacingMultiplier(),
                     textView.getLineSpacingExtra(), textView.getIncludeFontPadding());
         }
@@ -203,18 +215,18 @@ public class FitTextHelper {
         }
         return osize;
     }
-
-    protected CharSequence toCharSequence(List<CharSequence> lines, CharSequence text) {
-        if (lines == null || lines.size() == 0) {
-            return text;
-        }
-        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
-        for (CharSequence line : lines) {
-            spannableStringBuilder.append(line);
-            spannableStringBuilder.append("\n");
-        }
-        return spannableStringBuilder;
-    }
+//
+//    protected CharSequence toCharSequence(List<CharSequence> lines, CharSequence text) {
+//        if (lines == null || lines.size() == 0) {
+//            return text;
+//        }
+//        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
+//        for (CharSequence line : lines) {
+//            spannableStringBuilder.append(line);
+//            spannableStringBuilder.append("\n");
+//        }
+//        return spannableStringBuilder;
+//    }
 
     //
 //    /***
@@ -290,7 +302,8 @@ public class FitTextHelper {
     public CharSequence getLineBreaks(
             CharSequence text, TextPaint paint) {
         int width = textView.getTextWidth();
-        if (width <= 0 || textView.isKeepWord())
+        boolean keepWord = textView.isKeepWord();
+        if (width <= 0 || keepWord)
             return text;
         int length = text.length();
         int start = 0, end = 1;
@@ -299,9 +312,11 @@ public class FitTextHelper {
         while (end <= length) {
             CharSequence c = text.subSequence(end - 1, end);
 //            char c = text.charAt(end - 1);// cs最后一个字符
+            boolean needCheck = false;
             if (TextUtils.equals(c, "\n")) {// 已经换行
                 ssb.append(text, start, end);
                 start = end;
+                needCheck = true;
             } else {
                 float lw = paint.measureText(text, start, end);
                 if (lw > width) {// 超出宽度，退回一个位置
@@ -312,6 +327,7 @@ public class FitTextHelper {
                         if (!TextUtils.equals(c2, "\n"))
                             ssb.append('\n');
                     }
+                    needCheck = true;
                 } else if (lw == width) {
                     ssb.append(text, start, end);
                     start = end;
@@ -320,6 +336,7 @@ public class FitTextHelper {
                         if (!TextUtils.equals(c2, "\n"))
                             ssb.append('\n');
                     }
+                    needCheck = true;
                 } else if (end == length) {
                     // 已经是最后一个字符
                     ssb.append(text, start, end);
