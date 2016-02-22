@@ -3,8 +3,8 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 def libName = 'JustifyTextview'
-def siteUrl = 'https://github.com/247321453/Drawer'
-def gitUrl = 'https://github.com/247321453/Drawer.git'
+def siteUrl = 'https://github.com/247321453/JustifyTextView'
+def gitUrl = 'https://github.com/247321453/JustifyTextView.git'
 group = "com.github.247321453.justifytextview"
 version = '1.0.0'
 
