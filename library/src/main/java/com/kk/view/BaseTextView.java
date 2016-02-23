@@ -24,7 +24,7 @@ class BaseTextView extends TextView {
     private static final int MAX_LINES = 3;
     private static final int SINGLE_LINE = 4;
     protected boolean LineNoSpace = true;
-    protected boolean mJustify = true;
+    protected boolean mJustify = false;
 
     @SuppressWarnings("deprecation")
     private static final int[] ANDROID_ATTRS = new int[]{
@@ -60,6 +60,14 @@ class BaseTextView extends TextView {
             mSingleLine = a.getBoolean(SINGLE_LINE, mSingleLine);
             a.recycle();
         }
+    }
+
+    public boolean isJustify() {
+        return mJustify;
+    }
+
+    public void setJustify(boolean justify) {
+        mJustify = justify;
     }
 
     public boolean isLineNoSpace() {
@@ -171,7 +179,7 @@ class BaseTextView extends TextView {
             return;
         }
         TextPaint paint = getPaint();
-        paint.drawableState = getDrawableState();
+//        paint.drawableState = getDrawableState();
         int mViewWidth = getTextWidth();
         CharSequence text = getText();
         Layout layout = getLayout();
@@ -184,7 +192,7 @@ class BaseTextView extends TextView {
             int lineEnd = layout.getLineEnd(i);
 //            int top = layout.getLineTop(i);
             float x = layout.getLineLeft(i);
-            int mLineY = layout.getTopPadding() + (i+1) * getLineHeight();
+            int mLineY = layout.getTopPadding() + (i + 1) * getLineHeight();
             CharSequence line = text.subSequence(lineStart, lineEnd);
             if (line.length() == 0) {
                 continue;
@@ -216,9 +224,13 @@ class BaseTextView extends TextView {
                     float cw = getPaint().measureText(line, j, j + 1);
                     canvas.drawText(line, j, j + 1, x, mLineY, getPaint());
                     x += cw;
-                    // 是标点
+                    // 后面是标点
+                    if (isEmpty(line, j + 1, j + 2)) {
+                        x += d / 2;
+                    }
+                    //当前是标点
                     if (isEmpty(line, j, j + 1)) {
-                        x += d;
+                        x += d / 2;
                     }
                 }
             } else {
@@ -239,6 +251,9 @@ class BaseTextView extends TextView {
     }
 
     protected boolean isEmpty(CharSequence c, int start, int end) {
+        if (end >= c.length()) {
+            return false;
+        }
         CharSequence ch = c.subSequence(start, end);
         return TextUtils.equals(ch, " ") || FitTextHelper.sSpcaeList.contains(ch);
     }

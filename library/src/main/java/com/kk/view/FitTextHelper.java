@@ -46,9 +46,12 @@ public class FitTextHelper {
         sSpcaeList.add("。");
         sSpcaeList.add("？");
         sSpcaeList.add("！");
+        sSpcaeList.add("(");
+        sSpcaeList.add(")");
         sSpcaeList.add("[");
         sSpcaeList.add("]");
         sSpcaeList.add("@");
+        sSpcaeList.add("/");
         sSpcaeList.add("#");
         sSpcaeList.add("$");
         sSpcaeList.add("%");
@@ -63,7 +66,7 @@ public class FitTextHelper {
         sSpcaeList.add("\\");
         sSpcaeList.add("+");
         sSpcaeList.add("-");
-//        sSpcaeList.add("·");
+        sSpcaeList.add("·");
 //        sSpcaeList.add("●");
 //        sSpcaeList.add("【");
 //        sSpcaeList.add("】");
@@ -176,29 +179,30 @@ public class FitTextHelper {
                 high = paint.getTextSize();
             }
         }
-        float nsize = low;
-        paint.setTextSize(nsize);
-        int maxlines = getMaxLineCount();//当前最大行数
-        CharSequence ntext = getLineBreaks(text, paint);
-        StaticLayout layout = getStaticLayout(ntext, paint);
-        int lines = layout.getLineCount();//行数
-        int height = textView.getTextHeight();
-        float osize = nsize;
-        while (maxlines == lines) {
-            //行数相等,放大字体
-            osize = nsize;
-            nsize = nsize * 1.01f;
-            if (nsize <= max && layout.getHeight() < height) {
-                paint.setTextSize(nsize);
-                maxlines = getMaxLineCount();//当前最大行数
-                ntext = getLineBreaks(text, paint);
-                layout = getStaticLayout(ntext, paint);
-                lines = layout.getLineCount();//行数
-            } else {
-                break;
-            }
-        }
-        return osize;
+        return low;
+//        float nsize = low;
+//        paint.setTextSize(nsize);
+//        int maxlines = getMaxLineCount();//当前最大行数
+//        CharSequence ntext = getLineBreaks(text, paint);
+//        StaticLayout layout = getStaticLayout(ntext, paint);
+//        int lines = layout.getLineCount();//行数
+//        int height = textView.getTextHeight();
+//        float osize = nsize;
+//        while (maxlines == lines) {
+//            //行数相等,放大字体
+//            osize = nsize;
+//            nsize = nsize * 1.01f;
+//            if (nsize <= max && layout.getHeight() < height) {
+//                paint.setTextSize(nsize);
+//                maxlines = getMaxLineCount();//当前最大行数
+//                ntext = getLineBreaks(text, paint);
+//                layout = getStaticLayout(ntext, paint);
+//                lines = layout.getLineCount();//行数
+//            } else {
+//                break;
+//            }
+//        }
+//        return osize;
     }
 //
 //    protected CharSequence toCharSequence(List<CharSequence> lines, CharSequence text) {
