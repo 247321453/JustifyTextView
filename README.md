@@ -1,3 +1,6 @@
+Android Studio
+========================
+	compile 'com.github.247321453.justifytextview:library:1.1.0'
 CompactTextView
 ----------------------
 	缩放单行的字间距
