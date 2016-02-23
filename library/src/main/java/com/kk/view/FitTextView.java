@@ -104,7 +104,7 @@ public class FitTextView extends CompactTextView {
     }
 
     protected void fitText(CharSequence text) {
-        if (!mMeasured || mFittingText)
+        if (!mMeasured || mFittingText || mSingleLine)
             return;
         mFittingText = true;
         TextPaint oldPaint = getPaint();
