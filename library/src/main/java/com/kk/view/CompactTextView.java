@@ -1,8 +1,6 @@
 package com.kk.view;
 
 import android.content.Context;
-import android.graphics.Canvas;
-import android.text.Layout;
 import android.util.AttributeSet;
 
 public class CompactTextView extends BaseTextView {
@@ -31,6 +29,14 @@ public class CompactTextView extends BaseTextView {
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if(mNeedScaleText){
+            setText(getText());
+        }
+    }
+
+    @Override
     public void setText(CharSequence text, BufferType type) {
         if (text != null && mNeedScaleText && mSingleLine) {
             // 单行，并且设置宽度
@@ -51,37 +57,43 @@ public class CompactTextView extends BaseTextView {
 //                    }
 //                }
                 float width = getPaint().measureText(text, 0, text.length());
-                float s = Math.max(MIN_SCALEX, textWidth / width);
-                setTextScaleX(s);
+                if (width > textWidth) {
+//                    float w2 = width = getPaint().measureText(text, 0, text.length() - 1);
+//                    float d = Math.max(textWidth / width, textWidth / w2);
+//                    d = Math.max(textWidth / width, (d + textWidth / width)/2.0f);
+                    float s = Math.max(MIN_SCALEX, textWidth / width);
+                    setTextScaleX(s);
+                }
             }
         }
         super.setText(text, type);
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        if (SUPER_DRAW) {
-            super.onDraw(canvas);
-            return;
-        }
-        if (mNeedScaleText && mSingleLine) {
-            Layout layout = getLayout();
-            if (layout == null) {
-                layout = FitTextHelper.getStaticLayout(this, getText(), getPaint());
-            }
-            CharSequence text = getText();
-            float textWidth = getTextWidth();
-            float width = getPaint().measureText(text, 0, text.length());
-            float d = (textWidth - width) / text.length();
-            float x = layout.getLineLeft(0);
-            float y = getLineHeight();
-            for (int j = 0; j < text.length(); j++) {
-                float cw = getPaint().measureText(text, j, j + 1);
-                canvas.drawText(text, j, j + 1, x, y, getPaint());
-                x += cw + d;
-            }
-        } else {
-            super.onDraw(canvas);
-        }
-    }
+//    @Override
+//    protected void onDraw(Canvas canvas) {
+//        super.onDraw(canvas);
+//        if (SUPER_DRAW || getTextScaleX() == 1.0f) {
+//            super.onDraw(canvas);
+//            return;
+//        }
+//        if (mNeedScaleText && mSingleLine) {
+//            Layout layout = getLayout();
+//            if (layout == null) {
+//                layout = FitTextHelper.getStaticLayout(this, getText(), getPaint());
+//            }
+//            CharSequence text = getText();
+//            float textWidth = getTextWidth();
+//            float width = getPaint().measureText(text, 0, text.length());
+//            float d = (textWidth - width) / text.length();
+//            float x = layout.getLineLeft(0);
+//            float y = getLineHeight();
+//            for (int j = 0; j < text.length(); j++) {
+//                float cw = getPaint().measureText(text, j, j + 1);
+//                canvas.drawText(text, j, j + 1, x, y, getPaint());
+//                x += cw + d;
+//            }
+//        } else {
+//            super.onDraw(canvas);
+//        }
+//    }
 }

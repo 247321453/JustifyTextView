@@ -19,7 +19,7 @@ import java.util.List;
  * 标点句尾
  */
 public class FitTextHelper {
-    protected static final float LIMIT = 0.05f;// 误差
+    protected static final float LIMIT = 0.001f;// 误差
     private static final boolean LastNoSpace = false;
     protected BaseTextView textView;
 
@@ -120,6 +120,7 @@ public class FitTextHelper {
         return textView.getMeasuredWidth() - textView.getCompoundPaddingLeft()
                 - textView.getCompoundPaddingRight();
     }
+
     public StaticLayout getStaticLayout(CharSequence text, TextPaint paint) {
         return getStaticLayout(textView, text, paint);
     }
@@ -147,9 +148,9 @@ public class FitTextHelper {
     private boolean isFit(CharSequence text, TextPaint paint) {
         // 自动换行
         boolean mSingleLine = isSingleLine(textView);
-        int maxLines= textView.getMaxLinesCompat();
+        int maxLines = textView.getMaxLinesCompat();
         float multi = textView.getLineSpacingMultiplierCompat();
-        float space  = textView.getLineSpacingExtraCompat();
+        float space = textView.getLineSpacingExtraCompat();
 
         if (multi > 1.0) {
             space += ((float) paint.getFontMetricsInt(null)) * (multi - 1.0f);
@@ -179,6 +180,14 @@ public class FitTextHelper {
                 high = paint.getTextSize();
             }
         }
+//        paint.setTextSize(high);
+//        while(!isFit(getLineBreaks(text, paint), paint)){
+//            high -= (LIMIT/10.0f);
+//            paint.setTextSize(high);
+//        }
+//        while (isFit(getLineBreaks(text, paint), paint)) {
+//
+//        }
         return low;
 //        float nsize = low;
 //        paint.setTextSize(nsize);
