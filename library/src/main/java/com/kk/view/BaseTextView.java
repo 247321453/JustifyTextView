@@ -25,7 +25,10 @@ class BaseTextView extends TextView {
     private static final int SINGLE_LINE = 4;
     protected boolean LineNoSpace = true;
     protected boolean mJustify = false;
-
+    /***
+     * 不拆分单词
+     */
+    protected boolean mKeepWord = true;
     @SuppressWarnings("deprecation")
     private static final int[] ANDROID_ATTRS = new int[]{
             android.R.attr.includeFontPadding,
@@ -60,6 +63,14 @@ class BaseTextView extends TextView {
             mSingleLine = a.getBoolean(SINGLE_LINE, mSingleLine);
             a.recycle();
         }
+    }
+
+    public boolean isKeepWord() {
+        return mKeepWord;
+    }
+
+    public void setKeepWord(boolean keepWord) {
+        mKeepWord = keepWord;
     }
 
     public boolean isJustify() {

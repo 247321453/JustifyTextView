@@ -6,7 +6,11 @@ import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 
-public class FitTextView extends BaseTextView {
+public class FitCompactTextView extends CompactTextView {
+    /***
+     * 不拆分单词
+     */
+    protected boolean mKeepWord = true;
     /**
      * 不需要调整大小
      */
@@ -16,15 +20,15 @@ public class FitTextView extends BaseTextView {
     protected volatile boolean mFittingText = false;
     protected FitTextHelper mFitTextHelper;
 
-    public FitTextView(Context context) {
+    public FitCompactTextView(Context context) {
         this(context, null);
     }
 
-    public FitTextView(Context context, AttributeSet attrs) {
+    public FitCompactTextView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public FitTextView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public FitCompactTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, new int[]{
@@ -45,6 +49,14 @@ public class FitTextView extends BaseTextView {
             mFitTextHelper = new FitTextHelper(this);
         }
         return mFitTextHelper;
+    }
+
+    public boolean isKeepWord() {
+        return mKeepWord;
+    }
+
+    public void setKeepWord(boolean keepWord) {
+        mKeepWord = keepWord;
     }
 
     public float getMinTextSize() {

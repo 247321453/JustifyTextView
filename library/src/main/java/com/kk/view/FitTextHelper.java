@@ -21,7 +21,7 @@ import java.util.List;
 public class FitTextHelper {
     protected static final float LIMIT = 0.05f;// 误差
     private static final boolean LastNoSpace = false;
-    protected FitTextView textView;
+    protected BaseTextView textView;
 
     //region space list
     public final static List<CharSequence> sSpcaeList = new ArrayList<>();
@@ -80,7 +80,7 @@ public class FitTextHelper {
 
     protected volatile boolean mFittingText = false;
 
-    public FitTextHelper(FitTextView textView) {
+    public FitTextHelper(BaseTextView textView) {
         this.textView = textView;
     }
 
