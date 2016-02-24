@@ -21,7 +21,7 @@ import java.util.List;
 public class FitTextHelper {
     protected static final float LIMIT = 0.001f;// 误差
     private static final boolean LastNoSpace = false;
-    protected BaseTextView textView;
+    protected ITextView textView;
 
     //region space list
     public final static List<CharSequence> sSpcaeList = new ArrayList<>();
@@ -80,11 +80,16 @@ public class FitTextHelper {
 
     protected volatile boolean mFittingText = false;
 
-    public FitTextHelper(BaseTextView textView) {
+    public FitTextHelper(ITextView textView) {
         this.textView = textView;
     }
 
+    /***
+     * @param textView textview
+     * @return 是否是单行
+     */
     public static boolean isSingleLine(TextView textView) {
+        if (textView == null) return false;
         if (textView instanceof BaseTextView) {
             return ((BaseTextView) textView).isSingleLine();
         }
@@ -105,8 +110,11 @@ public class FitTextHelper {
 //                * multi + space;
 //    }
 
-    private int getMaxLineCount() {
-        float vspace = textView.getLineHeight();
+    /**
+     * @return 文本框的当前最大行数
+     */
+    protected int getMaxLineCount() {
+        float vspace = textView.getTextLineHeight();
         float height = textView.getTextHeight();
         return (int) (height / vspace);
     }
@@ -116,15 +124,33 @@ public class FitTextHelper {
 //        int inputType = textView.getInputType();
 //        return (inputType & EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE) == EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
 //    }
+
+    /**
+     * 文本框的宽度
+     *
+     * @param textView 文本框
+     * @return 宽度
+     */
     public static int getTextWidth(TextView textView) {
         return textView.getMeasuredWidth() - textView.getCompoundPaddingLeft()
                 - textView.getCompoundPaddingRight();
     }
 
+    /***
+     * @param text  文本
+     * @param paint 画笔
+     * @return 文本布局
+     */
     public StaticLayout getStaticLayout(CharSequence text, TextPaint paint) {
-        return getStaticLayout(textView, text, paint);
+        return getStaticLayout(textView.getTextView(), text, paint);
     }
 
+    /**
+     * @param textView 文本框
+     * @param text     文本
+     * @param paint    画笔
+     * @return 文本布局
+     */
     public static StaticLayout getStaticLayout(TextView textView, CharSequence text, TextPaint paint) {
         if (textView instanceof FitTextView) {
             FitTextView fitTextView = (FitTextView) textView;
@@ -142,12 +168,16 @@ public class FitTextHelper {
         }
     }
 
-    /***
+    /**
      * 判断内容是否在框内
+     *
+     * @param text  文本
+     * @param paint 画笔
+     * @return 没有超过框
      */
-    private boolean isFit(CharSequence text, TextPaint paint) {
+    protected boolean isFit(CharSequence text, TextPaint paint) {
         // 自动换行
-        boolean mSingleLine = isSingleLine(textView);
+        boolean mSingleLine = textView.isSingleLine();
         int maxLines = textView.getMaxLinesCompat();
         float multi = textView.getLineSpacingMultiplierCompat();
         float space = textView.getLineSpacingExtraCompat();
@@ -167,8 +197,24 @@ public class FitTextHelper {
         return layout.getLineCount() <= lines && layout.getHeight() <= height;
     }
 
-    public float fitTextSize(TextPaint oldPaint, CharSequence text,
-                             float max, float min) {
+    /**
+     * 调整字体大小
+     *
+     * @param oldPaint 旧画笔
+     * @param text     内容
+     * @param max      最大字体
+     * @param min      最小字体
+     * @return 适合字体大小
+     */
+    public float fitTextSize(TextPaint oldPaint, CharSequence text, float max, float min) {
+        if (TextUtils.isEmpty(text)) {
+            if (oldPaint != null) {
+                return oldPaint.getTextSize();
+            }
+            if (textView != null) {
+                return textView.getTextSize();
+            }
+        }
         float low = min;
         float high = max;
         TextPaint paint = new TextPaint(oldPaint);
@@ -188,21 +234,21 @@ public class FitTextHelper {
 //        while (isFit(getLineBreaks(text, paint), paint)) {
 //
 //        }
-        return low;
+
 //        float nsize = low;
-//        paint.setTextSize(nsize);
+//        paint.setTextSize(low);
 //        int maxlines = getMaxLineCount();//当前最大行数
 //        CharSequence ntext = getLineBreaks(text, paint);
 //        StaticLayout layout = getStaticLayout(ntext, paint);
 //        int lines = layout.getLineCount();//行数
 //        int height = textView.getTextHeight();
-//        float osize = nsize;
+//        float osize = low;
 //        while (maxlines == lines) {
 //            //行数相等,放大字体
-//            osize = nsize;
-//            nsize = nsize * 1.01f;
-//            if (nsize <= max && layout.getHeight() < height) {
-//                paint.setTextSize(nsize);
+//            low = osize;
+//            osize = osize * 1.001f;
+//            if (osize <= max && layout.getHeight() < height) {
+//                paint.setTextSize(osize);
 //                maxlines = getMaxLineCount();//当前最大行数
 //                ntext = getLineBreaks(text, paint);
 //                layout = getStaticLayout(ntext, paint);
@@ -211,7 +257,7 @@ public class FitTextHelper {
 //                break;
 //            }
 //        }
-//        return osize;
+        return low;
     }
 //
 //    protected CharSequence toCharSequence(List<CharSequence> lines, CharSequence text) {
@@ -297,6 +343,13 @@ public class FitTextHelper {
 //    }
 
 
+    /**
+     * 拆入换行符，解决中英文的换行问题
+     *
+     * @param text  内容
+     * @param paint 画笔
+     * @return 调整后的内容
+     */
     public CharSequence getLineBreaks(
             CharSequence text, TextPaint paint) {
         int width = textView.getTextWidth();
@@ -310,11 +363,11 @@ public class FitTextHelper {
         while (end <= length) {
             CharSequence c = text.subSequence(end - 1, end);
 //            char c = text.charAt(end - 1);// cs最后一个字符
-            boolean needCheck = false;
+//            boolean needCheck = false;
             if (TextUtils.equals(c, "\n")) {// 已经换行
                 ssb.append(text, start, end);
                 start = end;
-                needCheck = true;
+//                needCheck = true;
             } else {
                 float lw = paint.measureText(text, start, end);
                 if (lw > width) {// 超出宽度，退回一个位置
@@ -325,7 +378,7 @@ public class FitTextHelper {
                         if (!TextUtils.equals(c2, "\n"))
                             ssb.append('\n');
                     }
-                    needCheck = true;
+//                    needCheck = true;
                 } else if (lw == width) {
                     ssb.append(text, start, end);
                     start = end;
@@ -334,7 +387,7 @@ public class FitTextHelper {
                         if (!TextUtils.equals(c2, "\n"))
                             ssb.append('\n');
                     }
-                    needCheck = true;
+//                    needCheck = true;
                 } else if (end == length) {
                     // 已经是最后一个字符
                     ssb.append(text, start, end);
@@ -346,6 +399,12 @@ public class FitTextHelper {
         return ssb;
     }
 
+    /***
+     * 获取文本框的布局
+     *
+     * @param textView
+     * @return
+     */
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     public static Layout.Alignment getLayoutAlignment(TextView textView) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {

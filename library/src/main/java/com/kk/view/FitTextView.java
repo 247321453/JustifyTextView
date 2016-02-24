@@ -3,16 +3,22 @@ package com.kk.view;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.text.TextPaint;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 
-public class FitTextView extends BaseTextView {
+public class FitTextView extends CompactTextView {
+
+    private boolean mMeasured = false;
     /**
      * 不需要调整大小
      */
-    protected boolean mMeasured = false;
+    private boolean mNeedFit = true;
 
-    protected float mMinTextSize, mMaxTextSize;
+    private float mMinTextSize, mMaxTextSize;
+    /**
+     * 正在调整字体大小
+     */
     protected volatile boolean mFittingText = false;
     protected FitTextHelper mFitTextHelper;
 
@@ -47,25 +53,52 @@ public class FitTextView extends BaseTextView {
         return mFitTextHelper;
     }
 
+    /**
+     *
+     * @return 最小字体大小
+     */
     public float getMinTextSize() {
         return mMinTextSize;
     }
 
+    /**
+     *
+     * @param minTextSize 最小字体大小
+     */
     public void setMinTextSize(float minTextSize) {
         mMinTextSize = minTextSize;
     }
 
+    /**
+     *
+     * @return 最大字体大小
+     */
     public float getMaxTextSize() {
         return mMaxTextSize;
     }
 
+    /**
+     *
+     * @param maxTextSize 最大字体大小
+     */
     public void setMaxTextSize(float maxTextSize) {
         mMaxTextSize = maxTextSize;
     }
 
+    /**
+     * 是否需要调整字体
+     * @return
+     */
+    public boolean isNeedFit() {
+        return mNeedFit;
+    }
 
-    public boolean isMeasured() {
-        return mMeasured;
+    /**
+     *
+     * @param needFit 是否需要调整字体大小
+     */
+    public void setNeedFit(boolean needFit) {
+        mNeedFit = needFit;
     }
 
     @Override
@@ -81,18 +114,25 @@ public class FitTextView extends BaseTextView {
             mMeasured = false;
         } else {
             mMeasured = true;
-            fitText(getText());
+            fitText(getOriginalText());
         }
     }
 
     @Override
     public void setText(CharSequence text, BufferType type) {
         super.setText(text, type);
-        fitText(getText());
+        fitText(getOriginalText());
     }
 
+    /**
+     * 调整字体大小
+     * @param text 内容
+     */
     protected void fitText(CharSequence text) {
-        if (!mMeasured || mFittingText || mSingleLine)
+        if (!mNeedFit) {
+            return;
+        }
+        if (!mMeasured || mFittingText || mSingleLine || TextUtils.isEmpty(text))
             return;
         mFittingText = true;
         TextPaint oldPaint = getPaint();

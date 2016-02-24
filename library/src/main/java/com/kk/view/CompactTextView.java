@@ -32,7 +32,7 @@ public class CompactTextView extends BaseTextView {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         if(mNeedScaleText){
-            setText(getText());
+            setText(getOriginalText());
         }
     }
 

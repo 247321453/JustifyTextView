@@ -11,7 +11,7 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
-class BaseTextView extends TextView {
+class BaseTextView extends TextView implements ITextView {
     protected boolean mSingleLine = false;
     protected float mOriginalTextSize = 0;
     protected boolean mIncludeFontPadding = true;
@@ -25,6 +25,7 @@ class BaseTextView extends TextView {
     private static final int SINGLE_LINE = 4;
     protected boolean LineNoSpace = true;
     protected boolean mJustify = false;
+    protected CharSequence mOriginalText;
     /***
      * 不拆分单词
      */
@@ -49,6 +50,7 @@ class BaseTextView extends TextView {
     public BaseTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mOriginalTextSize = getTextSize();
+//        setBackgroundColor(Color.TRANSPARENT);
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, ANDROID_ATTRS);
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
@@ -65,6 +67,7 @@ class BaseTextView extends TextView {
         }
     }
 
+    @Override
     public boolean isKeepWord() {
         return mKeepWord;
     }
@@ -156,32 +159,65 @@ class BaseTextView extends TextView {
         mOriginalTextSize = getTextSize();
     }
 
+    @Override
     public int getTextWidth() {
-        return getMeasuredWidth() - getCompoundPaddingLeft()
-                - getCompoundPaddingRight();
+        return FitTextHelper.getTextWidth(this);
     }
 
+    @Override
     public int getTextHeight() {
         return getMeasuredHeight() - getCompoundPaddingTop()
                 - getCompoundPaddingBottom();
     }
 
-    public void setBoldText(boolean b) {
-        getPaint().setFakeBoldText(b);
+    /**
+     * 设置粗体
+     *
+     * @param bold 粗体
+     */
+    public void setBoldText(boolean bold) {
+        getPaint().setFakeBoldText(bold);
     }
 
-    public void setItalicText(boolean b) {
-        getPaint().setTextSkewX(b ? -0.25f : 0f);
+    /**
+     * 设置斜体
+     *
+     * @param italic 斜体
+     */
+    public void setItalicText(boolean italic) {
+        getPaint().setTextSkewX(italic ? -0.25f : 0f);
     }
 
+    @Override
     public boolean isSingleLine() {
         return mSingleLine;
     }
 
+    @Override
     public float getOriginalTextSize() {
         return mOriginalTextSize;
     }
 
+    @Override
+    public float getTextLineHeight() {
+        return getLineHeight();
+    }
+
+    @Override
+    public TextView getTextView() {
+        return this;
+    }
+
+    @Override
+    public CharSequence getOriginalText() {
+        return mOriginalText;
+    }
+
+    @Override
+    public void setText(CharSequence text, BufferType type) {
+        mOriginalText = text;
+        super.setText(text, type);
+    }
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -250,6 +286,12 @@ class BaseTextView extends TextView {
         }
     }
 
+    /**
+     * 共有多少个标点/空白字符
+     *
+     * @param text 内容
+     * @return 数量
+     */
     protected int countEmpty(CharSequence text) {
         int len = text.length();
         int count = 0;
@@ -261,12 +303,19 @@ class BaseTextView extends TextView {
         return count;
     }
 
+    /**
+     * 是否是标点/空白字符
+     *
+     * @param c     内容
+     * @param start 开始
+     * @param end   结束
+     */
     protected boolean isEmpty(CharSequence c, int start, int end) {
         if (end >= c.length()) {
             return false;
         }
         CharSequence ch = c.subSequence(start, end);
-        return TextUtils.equals(ch, " ") || FitTextHelper.sSpcaeList.contains(ch);
+        return TextUtils.equals(ch, "\t") || TextUtils.equals(ch, " ") || FitTextHelper.sSpcaeList.contains(ch);
     }
 
 //    private void drawScaledText(Canvas canvas, int mViewWidth, int mLineY, int lineStart, CharSequence line, float lineWidth) {
@@ -293,7 +342,12 @@ class BaseTextView extends TextView {
 //        return line.length() > 3 && line.charAt(0) == ' ' && line.charAt(1) == ' ';
 //    }
 
-    private boolean needScale(CharSequence end) {
+    /**
+     * 是否需要两端对齐
+     *
+     * @param end 结束字符
+     */
+    protected boolean needScale(CharSequence end) {
         return TextUtils.equals(end, " ");// || !TextUtils.equals(end, "\n");
     }
 
