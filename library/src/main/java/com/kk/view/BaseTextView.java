@@ -13,7 +13,6 @@ import android.widget.TextView;
 
 class BaseTextView extends TextView implements ITextView {
     protected boolean mSingleLine = false;
-    protected float mOriginalTextSize = 0;
     protected boolean mIncludeFontPadding = true;
     protected float mLineSpacingMult = 1;
     protected float mLineSpacingAdd = 0;
@@ -25,7 +24,7 @@ class BaseTextView extends TextView implements ITextView {
     private static final int SINGLE_LINE = 4;
     protected boolean LineNoSpace = true;
     protected boolean mJustify = false;
-    protected CharSequence mOriginalText;
+
     /***
      * 不拆分单词
      */
@@ -49,7 +48,6 @@ class BaseTextView extends TextView implements ITextView {
 
     public BaseTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mOriginalTextSize = getTextSize();
 //        setBackgroundColor(Color.TRANSPARENT);
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, ANDROID_ATTRS);
@@ -153,11 +151,6 @@ class BaseTextView extends TextView implements ITextView {
         mSingleLine = singleLine;
     }
 
-    @Override
-    public void setTextSize(int unit, float size) {
-        super.setTextSize(unit, size);
-        mOriginalTextSize = getTextSize();
-    }
 
     @Override
     public int getTextWidth() {
@@ -194,11 +187,6 @@ class BaseTextView extends TextView implements ITextView {
     }
 
     @Override
-    public float getOriginalTextSize() {
-        return mOriginalTextSize;
-    }
-
-    @Override
     public float getTextLineHeight() {
         return getLineHeight();
     }
@@ -206,17 +194,6 @@ class BaseTextView extends TextView implements ITextView {
     @Override
     public TextView getTextView() {
         return this;
-    }
-
-    @Override
-    public CharSequence getOriginalText() {
-        return mOriginalText;
-    }
-
-    @Override
-    public void setText(CharSequence text, BufferType type) {
-        mOriginalText = text;
-        super.setText(text, type);
     }
 
     @Override

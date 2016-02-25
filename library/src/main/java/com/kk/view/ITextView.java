@@ -59,13 +59,4 @@ public interface ITextView {
      * @return 不拆分单词
      */
     boolean isKeepWord();
-
-    /** 设置的初始字体 */
-    float getOriginalTextSize();
-
-    /**
-     *
-     * @return 原始文本
-     */
-    CharSequence getOriginalText();
 }
