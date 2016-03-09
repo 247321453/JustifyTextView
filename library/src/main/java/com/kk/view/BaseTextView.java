@@ -49,15 +49,15 @@ class BaseTextView extends TextView {
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, ANDROID_ATTRS);
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                mIncludeFontPadding = a.getBoolean(INCLUDE_FONT_PADDING,
+                mIncludeFontPadding = a.getBoolean(a.getIndex(INCLUDE_FONT_PADDING),
                         mIncludeFontPadding);
-                mLineSpacingMult = a.getFloat(LINE_SPACING_MULTIPLIER,
+                mLineSpacingMult = a.getFloat(a.getIndex(LINE_SPACING_MULTIPLIER),
                         mLineSpacingMult);
-                mLineSpacingAdd = a.getDimensionPixelSize(LINE_SPACING_EXTRA,
+                mLineSpacingAdd = a.getDimensionPixelSize(a.getIndex(LINE_SPACING_EXTRA),
                         (int) mLineSpacingAdd);
-                mMaxLines = a.getInteger(MAX_LINES, mMaxLines);
+                mMaxLines = a.getInteger(a.getIndex(MAX_LINES), mMaxLines);
             }
-            mSingleLine = a.getBoolean(SINGLE_LINE, mSingleLine);
+            mSingleLine = a.getBoolean(a.getIndex(SINGLE_LINE), mSingleLine);
             a.recycle();
         }
     }
@@ -184,7 +184,7 @@ class BaseTextView extends TextView {
             int lineEnd = layout.getLineEnd(i);
 //            int top = layout.getLineTop(i);
             float x = layout.getLineLeft(i);
-            int mLineY = layout.getTopPadding() + (i+1) * getLineHeight();
+            int mLineY = layout.getTopPadding() + (i + 1) * getLineHeight();
             CharSequence line = text.subSequence(lineStart, lineEnd);
             if (line.length() == 0) {
                 continue;
@@ -207,7 +207,7 @@ class BaseTextView extends TextView {
 //                canvas.drawText(line, 0, line.length(), 0, mLineY, paint);
 //            }
 //            float x = getCompoundPaddingLeft();
-            if (needScale) {
+            if (needScale && mViewWidth - lineWidth > 0) {
 //                float sc = mViewWidth / lineWidth;
                 //标点数
                 int clen = countEmpty(line);
