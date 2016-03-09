@@ -6,7 +6,7 @@ def libName = 'JustifyTextview'
 def siteUrl = 'https://github.com/247321453/JustifyTextView'
 def gitUrl = 'https://github.com/247321453/JustifyTextView.git'
 group = "com.github.247321453.justifytextview"
-version = '1.1.4'
+version = '1.1.5'
 
 android {
     compileSdkVersion 23

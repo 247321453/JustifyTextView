@@ -189,6 +189,10 @@ class BaseTextView extends TextView implements ITextView {
         getPaint().setTextSkewX(italic ? -0.25f : 0f);
     }
 
+    public boolean isItalicText() {
+        return getPaint().getTextSkewX() != 0f;
+    }
+
     @Override
     public boolean isSingleLine() {
         return mSingleLine;
@@ -212,7 +216,11 @@ class BaseTextView extends TextView implements ITextView {
         }
         TextPaint paint = getPaint();
 //        paint.drawableState = getDrawableState();
-        int mViewWidth = getTextWidth();
+        float mViewWidth = getTextWidth();
+        if (isItalicText()) {
+            float letterW = getPaint().measureText("a");
+            mViewWidth -= letterW;
+        }
         CharSequence text = getText();
         Layout layout = getLayout();
         if (layout == null) {
