@@ -1,12 +1,16 @@
 package com.kk.view;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
+
+import com.kk.justifytextview.R;
 
 public class CompactTextView extends BaseTextView {
     protected boolean mNeedScaleText = false;
-    protected final static float MIN_SCALEX = 0.25f;
-    protected boolean SUPER_DRAW = false;
+    private final static float MIN_SCALEX = 0.25f;
+    protected final float mMinScaleX;
+//    protected boolean SUPER_DRAW = false;
 
     public CompactTextView(Context context) {
         this(context, null);
@@ -18,6 +22,16 @@ public class CompactTextView extends BaseTextView {
 
     public CompactTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        if (attrs != null) {
+            TypedArray a = context.obtainStyledAttributes(attrs, new int[]{
+                    R.attr.needScaleText, R.attr.minScaleX
+            });
+            mNeedScaleText = a.getBoolean(0, mNeedScaleText);
+            mMinScaleX = a.getFloat(1, MIN_SCALEX);
+            a.recycle();
+        } else {
+            mMinScaleX = MIN_SCALEX;
+        }
     }
 
     public boolean isNeedScaleText() {
@@ -31,7 +45,7 @@ public class CompactTextView extends BaseTextView {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if(mNeedScaleText && mSingleLine){
+        if (mNeedScaleText && mSingleLine) {
             setText(getText());
         }
     }
@@ -61,7 +75,7 @@ public class CompactTextView extends BaseTextView {
 //                    float w2 = width = getPaint().measureText(text, 0, text.length() - 1);
 //                    float d = Math.max(textWidth / width, textWidth / w2);
 //                    d = Math.max(textWidth / width, (d + textWidth / width)/2.0f);
-                    float s = Math.max(MIN_SCALEX, textWidth / width);
+                    float s = Math.max(mMinScaleX, textWidth / width);
                     setTextScaleX(s);
                 }
             }

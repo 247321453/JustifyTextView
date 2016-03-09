@@ -4,4 +4,12 @@
         <attr name="ftMinTextSize" format="dimension"/>
         <attr name="ftMaxTextSize" format="dimension"/>
     </declare-styleable>
+    <declare-styleable name="CompactTextView">
+        <attr name="needScaleText" format="boolean"/>
+        <attr name="minScaleX" format="float"/>
+    </declare-styleable>
+    <declare-styleable name="BaseTextView">
+        <attr name="lineEndNoSpace" format="boolean"/>
+        <attr name="justify" format="boolean"/>
+    </declare-styleable>
 </resources>

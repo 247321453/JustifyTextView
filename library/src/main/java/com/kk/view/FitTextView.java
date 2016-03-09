@@ -7,6 +7,8 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 
+import com.kk.justifytextview.R;
+
 public class FitTextView extends CompactTextView {
 
     private boolean mMeasured = false;
@@ -36,11 +38,11 @@ public class FitTextView extends CompactTextView {
         mOriginalTextSize = getTextSize();
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, new int[]{
-                    com.kk.justifytextview.R.attr.ftMaxTextSize,
-                    com.kk.justifytextview.R.attr.ftMinTextSize,
+                    R.attr.ftMaxTextSize,
+                    R.attr.ftMinTextSize,
             });
-            mMinTextSize = a.getDimension(0, mOriginalTextSize / 2.0f);
-            mMaxTextSize = a.getDimension(1, mOriginalTextSize * 2.0f);
+            mMaxTextSize = a.getDimension(0, mOriginalTextSize * 2.0f);
+            mMinTextSize = a.getDimension(1, mOriginalTextSize / 2.0f);
             a.recycle();
         } else {
             mMinTextSize = mOriginalTextSize;

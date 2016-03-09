@@ -11,6 +11,8 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
+import com.kk.justifytextview.R;
+
 class BaseTextView extends TextView implements ITextView {
     protected boolean mSingleLine = false;
     protected boolean mIncludeFontPadding = true;
@@ -22,7 +24,9 @@ class BaseTextView extends TextView implements ITextView {
     private static final int LINE_SPACING_EXTRA = 2;
     private static final int MAX_LINES = 3;
     private static final int SINGLE_LINE = 4;
-    protected boolean LineNoSpace = true;
+    private static final int LINEEND_NO_SPACE = 5;
+    private static final int JUSTIFY = 6;
+    protected boolean mLineEndNoSpace = true;
     protected boolean mJustify = false;
 
     /***
@@ -35,7 +39,9 @@ class BaseTextView extends TextView implements ITextView {
             android.R.attr.lineSpacingMultiplier,
             android.R.attr.lineSpacingExtra,
             android.R.attr.maxLines,
-            android.R.attr.singleLine
+            android.R.attr.singleLine,
+            R.attr.lineEndNoSpace,
+            R.attr.justify,
     };
 
     public BaseTextView(Context context) {
@@ -52,15 +58,17 @@ class BaseTextView extends TextView implements ITextView {
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, ANDROID_ATTRS);
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                mIncludeFontPadding = a.getBoolean(a.getIndex(INCLUDE_FONT_PADDING),
+                mIncludeFontPadding = a.getBoolean(INCLUDE_FONT_PADDING,
                         mIncludeFontPadding);
-                mLineSpacingMult = a.getFloat(a.getIndex(LINE_SPACING_MULTIPLIER),
+                mLineSpacingMult = a.getFloat(LINE_SPACING_MULTIPLIER,
                         mLineSpacingMult);
-                mLineSpacingAdd = a.getDimensionPixelSize(a.getIndex(LINE_SPACING_EXTRA),
+                mLineSpacingAdd = a.getDimensionPixelSize(LINE_SPACING_EXTRA,
                         (int) mLineSpacingAdd);
-                mMaxLines = a.getInteger(a.getIndex(MAX_LINES), mMaxLines);
+                mMaxLines = a.getInteger(MAX_LINES, mMaxLines);
             }
-            mSingleLine = a.getBoolean(a.getIndex(SINGLE_LINE), mSingleLine);
+            mSingleLine = a.getBoolean(SINGLE_LINE, mSingleLine);
+            mLineEndNoSpace = a.getBoolean(LINEEND_NO_SPACE, mLineEndNoSpace);
+            mJustify = a.getBoolean(JUSTIFY, mJustify);
             a.recycle();
         }
     }
@@ -82,12 +90,12 @@ class BaseTextView extends TextView implements ITextView {
         mJustify = justify;
     }
 
-    public boolean isLineNoSpace() {
-        return LineNoSpace;
+    public boolean isLineEndNoSpace() {
+        return mLineEndNoSpace;
     }
 
-    public void setLineNoSpace(boolean lineNoSpace) {
-        LineNoSpace = lineNoSpace;
+    public void setLineEndNoSpace(boolean lineEndNoSpace) {
+        mLineEndNoSpace = lineEndNoSpace;
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -221,7 +229,7 @@ class BaseTextView extends TextView implements ITextView {
             if (line.length() == 0) {
                 continue;
             }
-            if (LineNoSpace) {
+            if (mLineEndNoSpace) {
                 if (TextUtils.equals(line.subSequence(line.length() - 1, line.length()), " ")) {
                     line = line.subSequence(0, line.length() - 1);
                 }
@@ -239,7 +247,7 @@ class BaseTextView extends TextView implements ITextView {
 //                canvas.drawText(line, 0, line.length(), 0, mLineY, paint);
 //            }
 //            float x = getCompoundPaddingLeft();
-            if (needScale && mViewWidth - lineWidth > 0) {
+            if (needScale && mViewWidth > lineWidth) {
 //                float sc = mViewWidth / lineWidth;
                 //标点数
                 int clen = countEmpty(line);
