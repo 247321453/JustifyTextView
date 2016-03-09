@@ -11,9 +11,8 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
-class BaseTextView extends TextView {
+class BaseTextView extends TextView implements ITextView {
     protected boolean mSingleLine = false;
-    protected float mOriginalTextSize = 0;
     protected boolean mIncludeFontPadding = true;
     protected float mLineSpacingMult = 1;
     protected float mLineSpacingAdd = 0;
@@ -24,8 +23,12 @@ class BaseTextView extends TextView {
     private static final int MAX_LINES = 3;
     private static final int SINGLE_LINE = 4;
     protected boolean LineNoSpace = true;
-    protected boolean mJustify = true;
+    protected boolean mJustify = false;
 
+    /***
+     * 不拆分单词
+     */
+    protected boolean mKeepWord = true;
     @SuppressWarnings("deprecation")
     private static final int[] ANDROID_ATTRS = new int[]{
             android.R.attr.includeFontPadding,
@@ -45,7 +48,7 @@ class BaseTextView extends TextView {
 
     public BaseTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mOriginalTextSize = getTextSize();
+//        setBackgroundColor(Color.TRANSPARENT);
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, ANDROID_ATTRS);
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
@@ -60,6 +63,23 @@ class BaseTextView extends TextView {
             mSingleLine = a.getBoolean(a.getIndex(SINGLE_LINE), mSingleLine);
             a.recycle();
         }
+    }
+
+    @Override
+    public boolean isKeepWord() {
+        return mKeepWord;
+    }
+
+    public void setKeepWord(boolean keepWord) {
+        mKeepWord = keepWord;
+    }
+
+    public boolean isJustify() {
+        return mJustify;
+    }
+
+    public void setJustify(boolean justify) {
+        mJustify = justify;
     }
 
     public boolean isLineNoSpace() {
@@ -131,38 +151,50 @@ class BaseTextView extends TextView {
         mSingleLine = singleLine;
     }
 
+
     @Override
-    public void setTextSize(int unit, float size) {
-        super.setTextSize(unit, size);
-        mOriginalTextSize = getTextSize();
-    }
-
     public int getTextWidth() {
-        return getMeasuredWidth() - getCompoundPaddingLeft()
-                - getCompoundPaddingRight();
+        return FitTextHelper.getTextWidth(this);
     }
 
+    @Override
     public int getTextHeight() {
         return getMeasuredHeight() - getCompoundPaddingTop()
                 - getCompoundPaddingBottom();
     }
 
-    public void setBoldText(boolean b) {
-        getPaint().setFakeBoldText(b);
+    /**
+     * 设置粗体
+     *
+     * @param bold 粗体
+     */
+    public void setBoldText(boolean bold) {
+        getPaint().setFakeBoldText(bold);
     }
 
-    public void setItalicText(boolean b) {
-        getPaint().setTextSkewX(b ? -0.25f : 0f);
+    /**
+     * 设置斜体
+     *
+     * @param italic 斜体
+     */
+    public void setItalicText(boolean italic) {
+        getPaint().setTextSkewX(italic ? -0.25f : 0f);
     }
 
+    @Override
     public boolean isSingleLine() {
         return mSingleLine;
     }
 
-    public float getOriginalTextSize() {
-        return mOriginalTextSize;
+    @Override
+    public float getTextLineHeight() {
+        return getLineHeight();
     }
 
+    @Override
+    public TextView getTextView() {
+        return this;
+    }
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -171,7 +203,7 @@ class BaseTextView extends TextView {
             return;
         }
         TextPaint paint = getPaint();
-        paint.drawableState = getDrawableState();
+//        paint.drawableState = getDrawableState();
         int mViewWidth = getTextWidth();
         CharSequence text = getText();
         Layout layout = getLayout();
@@ -216,9 +248,13 @@ class BaseTextView extends TextView {
                     float cw = getPaint().measureText(line, j, j + 1);
                     canvas.drawText(line, j, j + 1, x, mLineY, getPaint());
                     x += cw;
-                    // 是标点
+                    // 后面是标点
+                    if (isEmpty(line, j + 1, j + 2)) {
+                        x += d / 2;
+                    }
+                    //当前是标点
                     if (isEmpty(line, j, j + 1)) {
-                        x += d;
+                        x += d / 2;
                     }
                 }
             } else {
@@ -227,6 +263,12 @@ class BaseTextView extends TextView {
         }
     }
 
+    /**
+     * 共有多少个标点/空白字符
+     *
+     * @param text 内容
+     * @return 数量
+     */
     protected int countEmpty(CharSequence text) {
         int len = text.length();
         int count = 0;
@@ -238,9 +280,19 @@ class BaseTextView extends TextView {
         return count;
     }
 
+    /**
+     * 是否是标点/空白字符
+     *
+     * @param c     内容
+     * @param start 开始
+     * @param end   结束
+     */
     protected boolean isEmpty(CharSequence c, int start, int end) {
+        if (end >= c.length()) {
+            return false;
+        }
         CharSequence ch = c.subSequence(start, end);
-        return TextUtils.equals(ch, " ") || FitTextHelper.sSpcaeList.contains(ch);
+        return TextUtils.equals(ch, "\t") || TextUtils.equals(ch, " ") || FitTextHelper.sSpcaeList.contains(ch);
     }
 
 //    private void drawScaledText(Canvas canvas, int mViewWidth, int mLineY, int lineStart, CharSequence line, float lineWidth) {
@@ -267,7 +319,12 @@ class BaseTextView extends TextView {
 //        return line.length() > 3 && line.charAt(0) == ' ' && line.charAt(1) == ' ';
 //    }
 
-    private boolean needScale(CharSequence end) {
+    /**
+     * 是否需要两端对齐
+     *
+     * @param end 结束字符
+     */
+    protected boolean needScale(CharSequence end) {
         return TextUtils.equals(end, " ");// || !TextUtils.equals(end, "\n");
     }
 

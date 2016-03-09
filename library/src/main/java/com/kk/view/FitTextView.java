@@ -3,20 +3,23 @@ package com.kk.view;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.text.TextPaint;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 
 public class FitTextView extends CompactTextView {
-    /***
-     * 不拆分单词
-     */
-    protected boolean mKeepWord = true;
+
+    private boolean mMeasured = false;
     /**
      * 不需要调整大小
      */
-    protected boolean mMeasured = false;
-
-    protected float mMinTextSize, mMaxTextSize;
+    private boolean mNeedFit = true;
+    protected float mOriginalTextSize = 0;
+    private float mMinTextSize, mMaxTextSize;
+    protected CharSequence mOriginalText;
+    /**
+     * 正在调整字体大小
+     */
     protected volatile boolean mFittingText = false;
     protected FitTextHelper mFitTextHelper;
 
@@ -30,6 +33,7 @@ public class FitTextView extends CompactTextView {
 
     public FitTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        mOriginalTextSize = getTextSize();
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, new int[]{
                     com.kk.justifytextview.R.attr.ftMaxTextSize,
@@ -51,34 +55,60 @@ public class FitTextView extends CompactTextView {
         return mFitTextHelper;
     }
 
-    public boolean isKeepWord() {
-        return mKeepWord;
-    }
-
-    public void setKeepWord(boolean keepWord) {
-        mKeepWord = keepWord;
-    }
-
+    /**
+     * @return 最小字体大小
+     */
     public float getMinTextSize() {
         return mMinTextSize;
     }
 
+    /**
+     * @param minTextSize 最小字体大小
+     */
     public void setMinTextSize(float minTextSize) {
         mMinTextSize = minTextSize;
     }
 
+    /**
+     * @return 最大字体大小
+     */
     public float getMaxTextSize() {
         return mMaxTextSize;
     }
 
+    /**
+     * @param maxTextSize 最大字体大小
+     */
     public void setMaxTextSize(float maxTextSize) {
         mMaxTextSize = maxTextSize;
     }
 
-
-    public boolean isMeasured() {
-        return mMeasured;
+    /**
+     * 是否需要调整字体
+     *
+     * @return
+     */
+    public boolean isNeedFit() {
+        return mNeedFit;
     }
+
+    /**
+     * @param needFit 是否需要调整字体大小
+     */
+    public void setNeedFit(boolean needFit) {
+        mNeedFit = needFit;
+    }
+
+    @Override
+    public void setTextSize(int unit, float size) {
+        super.setTextSize(unit, size);
+        mOriginalTextSize = getTextSize();
+    }
+
+    public float getOriginalTextSize() {
+        return mOriginalTextSize;
+    }
+
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -89,28 +119,41 @@ public class FitTextView extends CompactTextView {
 
         if (widthMode == MeasureSpec.UNSPECIFIED
                 && heightMode == MeasureSpec.UNSPECIFIED) {
-            setTextSize(TypedValue.COMPLEX_UNIT_PX, mOriginalTextSize);
+            super.setTextSize(TypedValue.COMPLEX_UNIT_PX, mOriginalTextSize);
             mMeasured = false;
         } else {
             mMeasured = true;
-            fitText(getText());
+            fitText(getOriginalText());
         }
     }
 
     @Override
     public void setText(CharSequence text, BufferType type) {
+        mOriginalText = text;
         super.setText(text, type);
-        fitText(getText());
+        fitText(text);
     }
 
+    public CharSequence getOriginalText() {
+        return mOriginalText;
+    }
+
+    /**
+     * 调整字体大小
+     *
+     * @param text 内容
+     */
     protected void fitText(CharSequence text) {
-        if (!mMeasured || mFittingText)
+        if (!mNeedFit) {
+            return;
+        }
+        if (!mMeasured || mFittingText || mSingleLine || TextUtils.isEmpty(text))
             return;
         mFittingText = true;
         TextPaint oldPaint = getPaint();
         float size = getFitTextHelper().fitTextSize(oldPaint, text, mMaxTextSize, mMinTextSize);
-        setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
-        setText(getFitTextHelper().getLineBreaks(text, getPaint()));
+        super.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+        super.setText(getFitTextHelper().getLineBreaks(text, getPaint()));
         mFittingText = false;
     }
 }
