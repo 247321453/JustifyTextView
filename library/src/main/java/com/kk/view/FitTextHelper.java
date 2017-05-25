@@ -24,57 +24,57 @@ public class FitTextHelper {
     protected ITextView textView;
 
     //region space list
-    public final static List<CharSequence> sSpcaeList = new ArrayList<>();
+    public final static List<Character> sSpcaeList = new ArrayList<>();
 
     static {
-        sSpcaeList.add(",");
-        sSpcaeList.add(".");
-        sSpcaeList.add(";");
-        sSpcaeList.add("'");
-        sSpcaeList.add("\"");
-        sSpcaeList.add(":");
-        sSpcaeList.add("?");
-        sSpcaeList.add("~");
-        sSpcaeList.add("!");
-        sSpcaeList.add("‘");
-        sSpcaeList.add("’");
-        sSpcaeList.add("”");
-        sSpcaeList.add("“");
-        sSpcaeList.add("；");
-        sSpcaeList.add("：");
-        sSpcaeList.add("，");
-        sSpcaeList.add("。");
-        sSpcaeList.add("？");
-        sSpcaeList.add("！");
-        sSpcaeList.add("(");
-        sSpcaeList.add(")");
-        sSpcaeList.add("[");
-        sSpcaeList.add("]");
-        sSpcaeList.add("@");
-        sSpcaeList.add("/");
-        sSpcaeList.add("#");
-        sSpcaeList.add("$");
-        sSpcaeList.add("%");
-        sSpcaeList.add("^");
-        sSpcaeList.add("&");
-        sSpcaeList.add("*");
-//        sSpcaeList.add("{");
-//        sSpcaeList.add("}");
-        sSpcaeList.add("<");
-        sSpcaeList.add(">");
-//        sSpcaeList.add("/");
-//        sSpcaeList.add("\\");
-        sSpcaeList.add("+");
-        sSpcaeList.add("-");
-        sSpcaeList.add("·");
-//        sSpcaeList.add("●");
-//        sSpcaeList.add("【");
-//        sSpcaeList.add("】");
-//        sSpcaeList.add("《");
-//        sSpcaeList.add("》");
-//        sSpcaeList.add("『");
-//        sSpcaeList.add("』");
-//        sSpcaeList.add("／");
+        sSpcaeList.add(',');
+        sSpcaeList.add('.');
+        sSpcaeList.add(';');
+        sSpcaeList.add('\'');
+        sSpcaeList.add('\"');
+        sSpcaeList.add(':');
+        sSpcaeList.add('?');
+        sSpcaeList.add('~');
+        sSpcaeList.add('!');
+        sSpcaeList.add('‘');
+        sSpcaeList.add('’');
+        sSpcaeList.add('”');
+        sSpcaeList.add('“');
+        sSpcaeList.add('；');
+        sSpcaeList.add('：');
+        sSpcaeList.add('，');
+        sSpcaeList.add('。');
+        sSpcaeList.add('？');
+        sSpcaeList.add('！');
+        sSpcaeList.add('(');
+        sSpcaeList.add(')');
+        sSpcaeList.add('[');
+        sSpcaeList.add(']');
+        sSpcaeList.add('@');
+        sSpcaeList.add('/');
+        sSpcaeList.add('#');
+        sSpcaeList.add('$');
+        sSpcaeList.add('%');
+        sSpcaeList.add('^');
+        sSpcaeList.add('&');
+        sSpcaeList.add('*');
+        sSpcaeList.add('{');
+        sSpcaeList.add('}');
+        sSpcaeList.add('<');
+        sSpcaeList.add('>');
+        sSpcaeList.add('/');
+        sSpcaeList.add('\\');
+        sSpcaeList.add('+');
+        sSpcaeList.add('-');
+        sSpcaeList.add('·');
+        sSpcaeList.add('●');
+        sSpcaeList.add('【');
+        sSpcaeList.add('】');
+        sSpcaeList.add('《');
+        sSpcaeList.add('》');
+        sSpcaeList.add('『');
+        sSpcaeList.add('』');
+        sSpcaeList.add('／');
     }
     //endregion
 
@@ -84,6 +84,9 @@ public class FitTextHelper {
         this.textView = textView;
     }
 
+    public static boolean isSpace(char charSequence){
+        return sSpcaeList.contains(charSequence);
+    }
     /***
      * @param textView textview
      * @return 是否是单行
