@@ -2,11 +2,15 @@ package com.kk.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.text.TextPaint;
 import android.util.AttributeSet;
 
 import com.kk.justifytextview.R;
 
-public class CompactTextView extends BaseTextView {
+/***
+ * 单行变窄
+ */
+public class CompactTextView extends JustifyTextView {
     protected boolean mNeedScaleText = false;
     private final static float MIN_SCALEX = 0.25f;
     protected final float mMinScaleX;
@@ -24,10 +28,11 @@ public class CompactTextView extends BaseTextView {
         super(context, attrs, defStyleAttr);
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, new int[]{
-                    R.attr.needScaleText, R.attr.minScaleX
+                    R.styleable.CompactTextView_needScaleText,
+                    R.styleable.CompactTextView_minScaleX,
             });
-            mNeedScaleText = a.getBoolean(0, mNeedScaleText);
-            mMinScaleX = a.getFloat(1, MIN_SCALEX);
+            mNeedScaleText = a.getBoolean(R.styleable.CompactTextView_needScaleText, mNeedScaleText);
+            mMinScaleX = a.getFloat(R.styleable.CompactTextView_minScaleX, MIN_SCALEX);
             a.recycle();
         } else {
             mMinScaleX = MIN_SCALEX;
@@ -38,6 +43,9 @@ public class CompactTextView extends BaseTextView {
         return mNeedScaleText;
     }
 
+    /**
+     * 水平拉伸，变窄
+     */
     public void setNeedScaleText(boolean needScaleText) {
         mNeedScaleText = needScaleText;
     }
@@ -56,58 +64,15 @@ public class CompactTextView extends BaseTextView {
             // 单行，并且设置宽度
             float textWidth = getTextWidth();
             if (textWidth > 0) {
-                setTextScaleX(1.0f);
-//                float low = MIN_SCALEX;
-//                float high = 1.0f;
-//                while (Math.abs(low - high) > 0.001f) {
-//                    setTextScaleX((low + high) / 2.0f);
-//                    float width = getPaint().measureText(text, 0, text.length());
-//                    if (width == textWidth) {
-//                        break;
-//                    } else if (width > textWidth) {
-//                        high = getTextScaleX();
-//                    } else {
-//                        low = getTextScaleX();
-//                    }
-//                }
-                float width = getPaint().measureText(text, 0, text.length());
+                TextPaint textPaint = getPaint();
+                textPaint.setTextScaleX(1.0f);
+                float width = textPaint.measureText(text, 0, text.length());
                 if (width > textWidth) {
-//                    float w2 = width = getPaint().measureText(text, 0, text.length() - 1);
-//                    float d = Math.max(textWidth / width, textWidth / w2);
-//                    d = Math.max(textWidth / width, (d + textWidth / width)/2.0f);
                     float s = Math.max(mMinScaleX, textWidth / width);
-                    setTextScaleX(s);
+                    textPaint.setTextScaleX(s);
                 }
             }
         }
         super.setText(text, type);
     }
-
-//    @Override
-//    protected void onDraw(Canvas canvas) {
-//        super.onDraw(canvas);
-//        if (SUPER_DRAW || getTextScaleX() == 1.0f) {
-//            super.onDraw(canvas);
-//            return;
-//        }
-//        if (mNeedScaleText && mSingleLine) {
-//            Layout layout = getLayout();
-//            if (layout == null) {
-//                layout = FitTextHelper.getStaticLayout(this, getText(), getPaint());
-//            }
-//            CharSequence text = getText();
-//            float textWidth = getTextWidth();
-//            float width = getPaint().measureText(text, 0, text.length());
-//            float d = (textWidth - width) / text.length();
-//            float x = layout.getLineLeft(0);
-//            float y = getLineHeight();
-//            for (int j = 0; j < text.length(); j++) {
-//                float cw = getPaint().measureText(text, j, j + 1);
-//                canvas.drawText(text, j, j + 1, x, y, getPaint());
-//                x += cw + d;
-//            }
-//        } else {
-//            super.onDraw(canvas);
-//        }
-//    }
 }

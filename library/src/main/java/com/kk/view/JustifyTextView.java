@@ -12,70 +12,66 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.TextView;
 
-import com.android.internal.util.FastMath;
 import com.kk.justifytextview.R;
 
-class BaseTextView extends TextView implements ITextView {
+import java.lang.reflect.Method;
+
+/***
+ * 两端对齐
+ */
+public class JustifyTextView extends TextView {
     protected boolean mSingleLine = false;
     protected boolean mIncludeFontPadding = true;
     protected float mLineSpacingMult = 1;
     protected float mLineSpacingAdd = 0;
     protected int mMaxLines = Integer.MAX_VALUE;
-    private static final int INCLUDE_FONT_PADDING = 0;
-    private static final int LINE_SPACING_MULTIPLIER = 1;
-    private static final int LINE_SPACING_EXTRA = 2;
-    private static final int MAX_LINES = 3;
-    private static final int SINGLE_LINE = 4;
-    private static final int LINEEND_NO_SPACE = 5;
-    private static final int JUSTIFY = 6;
-    protected boolean mLineEndNoSpace = true;
     protected boolean mJustify = false;
 
     /***
      * 不拆分单词
      */
     protected boolean mKeepWord = true;
-    @SuppressWarnings("deprecation")
-    private static final int[] ANDROID_ATTRS = new int[]{
-            android.R.attr.includeFontPadding,
-            android.R.attr.lineSpacingMultiplier,
-            android.R.attr.lineSpacingExtra,
-            android.R.attr.maxLines,
-            android.R.attr.singleLine,
-            R.attr.lineEndNoSpace,
-            R.attr.justify,
-            };
+    private Method assumeLayout;
 
-    public BaseTextView(Context context) {
+    public JustifyTextView(Context context) {
         this(context, null);
     }
 
-    public BaseTextView(Context context, AttributeSet attrs) {
+    public JustifyTextView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public BaseTextView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public JustifyTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-//        setBackgroundColor(Color.TRANSPARENT);
+        try {
+            assumeLayout = TextView.class.getDeclaredMethod("assumeLayout");
+            assumeLayout.setAccessible(true);
+        } catch (Exception e) {
+        }
         if (attrs != null) {
-            TypedArray a = context.obtainStyledAttributes(attrs, ANDROID_ATTRS);
+            TypedArray a = context.obtainStyledAttributes(attrs, new int[]{
+                    android.R.styleable.TextView_includeFontPadding,
+                    android.R.styleable.TextView_lineSpacingMultiplier,
+                    android.R.styleable.TextView_lineSpacingExtra,
+                    android.R.styleable.TextView_maxLines,
+                    android.R.styleable.TextView_singleLine,
+                    R.styleable.JustifyTextView_justify
+            });
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                mIncludeFontPadding = a.getBoolean(INCLUDE_FONT_PADDING,
-                        mIncludeFontPadding);
-                mLineSpacingMult = a.getFloat(LINE_SPACING_MULTIPLIER,
-                        mLineSpacingMult);
-                mLineSpacingAdd = a.getDimensionPixelSize(LINE_SPACING_EXTRA,
-                        (int) mLineSpacingAdd);
-                mMaxLines = a.getInteger(MAX_LINES, mMaxLines);
+                mIncludeFontPadding = a.getBoolean(
+                        android.R.styleable.TextView_includeFontPadding, mIncludeFontPadding);
+                mLineSpacingMult = a.getFloat(
+                        android.R.styleable.TextView_lineSpacingMultiplier, mLineSpacingMult);
+                mLineSpacingAdd = a.getDimensionPixelSize(
+                        android.R.styleable.TextView_lineSpacingExtra, (int) mLineSpacingAdd);
+                mMaxLines = a.getInteger(android.R.styleable.TextView_maxLines, mMaxLines);
             }
-            mSingleLine = a.getBoolean(SINGLE_LINE, mSingleLine);
-            mLineEndNoSpace = a.getBoolean(LINEEND_NO_SPACE, mLineEndNoSpace);
-            mJustify = a.getBoolean(JUSTIFY, mJustify);
+            mSingleLine = a.getBoolean(android.R.styleable.TextView_singleLine, mSingleLine);
+            mJustify = a.getBoolean(R.styleable.JustifyTextView_justify, mJustify);
             a.recycle();
         }
     }
 
-    @Override
     public boolean isKeepWord() {
         return mKeepWord;
     }
@@ -90,14 +86,6 @@ class BaseTextView extends TextView implements ITextView {
 
     public void setJustify(boolean justify) {
         mJustify = justify;
-    }
-
-    public boolean isLineEndNoSpace() {
-        return mLineEndNoSpace;
-    }
-
-    public void setLineEndNoSpace(boolean lineEndNoSpace) {
-        mLineEndNoSpace = lineEndNoSpace;
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -161,13 +149,11 @@ class BaseTextView extends TextView implements ITextView {
         mSingleLine = singleLine;
     }
 
-
-    @Override
     public int getTextWidth() {
-        return FitTextHelper.getTextWidth(this);
+        return getMeasuredWidth() - getCompoundPaddingLeft()
+                - getCompoundPaddingRight();
     }
 
-    @Override
     public int getTextHeight() {
         return getMeasuredHeight() - getCompoundPaddingTop()
                 - getCompoundPaddingBottom();
@@ -195,24 +181,8 @@ class BaseTextView extends TextView implements ITextView {
         return getPaint().getTextSkewX() != 0f;
     }
 
-    @Override
     public boolean isSingleLine() {
         return mSingleLine;
-    }
-
-    @Override
-    public float getTextLineHeight() {
-        return getLineHeight();
-    }
-
-    @Override
-    public TextView getTextView() {
-        return this;
-    }
-
-    public int getLineHeight(TextPaint paint) {
-        return FastMath.round(paint.getFontMetricsInt(null) * getLineSpacingMultiplierCompat()
-                + getLineSpacingExtraCompat());
     }
 
     @Override
@@ -221,57 +191,88 @@ class BaseTextView extends TextView implements ITextView {
             super.onDraw(canvas);
             return;
         }
+        Log.d("kk", "onDraw");
+        forceDraw(canvas);
+    }
+
+    protected void forceDraw(Canvas canvas) {
         TextPaint paint = getPaint();
         float mViewWidth = getTextWidth();
+        final float wordW = paint.measureText("aa");
         if (isItalicText()) {
-            float letterW = getPaint().measureText("a");
+            float letterW = paint.measureText("a");
             mViewWidth -= letterW;
         }
         CharSequence text = getText();
         Layout layout = getLayout();
+        if (layout == null && assumeLayout != null) {
+            try {
+                assumeLayout.invoke(this);
+                layout = getLayout();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         if (layout == null) {
             layout = FitTextHelper.getStaticLayout(this, getText(), getPaint());
         }
+
         int count = layout.getLineCount();
-        int mTop = layout.getTopPadding();
+//        int mTop = layout.getTopPadding();
+//        boolean firstIsPoint = false;
         for (int i = 0; i < count; i++) {
             int lineStart = layout.getLineStart(i);
+//            if (firstIsPoint) {
+//                lineStart++;
+//            }
             int lineEnd = layout.getLineEnd(i);
-            int top = layout.getLineTop(i);
+            int lbottom = layout.getLineBottom(i);
             float x = layout.getLineLeft(i);
-            int mLineY = mTop + top + getLineHeight(paint);
+            int mLineY = lbottom - layout.getLineDescent(i);
             CharSequence line = text.subSequence(lineStart, lineEnd);
             if (line.length() == 0) {
                 continue;
             }
-            if (mLineEndNoSpace) {
-                if (TextUtils.equals(line.subSequence(line.length() - 1, line.length()), " ")) {
-                    line = line.subSequence(0, line.length() - 1);
-                }
-                if (TextUtils.equals(line.subSequence(0, 1), " ")) {
-                    line = line.subSequence(1, line.length() - 1);
-                }
+            if (TextUtils.equals(line.subSequence(line.length() - 1, line.length()), " ")) {
+                line = line.subSequence(0, line.length() - 1);
+            }
+            if (TextUtils.equals(line.subSequence(0, 1), " ")) {
+                line = line.subSequence(1, line.length() - 1);
             }
             float lineWidth = getPaint().measureText(text, lineStart, lineEnd);
             boolean needScale = i < (count - 1) && (needScale(text.subSequence(lineEnd - 1, lineEnd)));
-            if (needScale || mViewWidth > lineWidth) {
-//                float sc = mViewWidth / lineWidth;
+            if ((mKeepWord && needScale) || (!mKeepWord && mViewWidth > lineWidth && lineWidth >= (mViewWidth - wordW*1.5f))) {
                 //标点数
-                int clen = countEmpty(line);
-                Log.d("kk", "line=" + i + ":" + line + ",count=" + clen);
-                float d = (mViewWidth - lineWidth) / clen;
                 final int lineLen = line.length();
+                float d;
+//                char nextLineFirst = ' ';
+//                if (mKeepWord && (lineEnd + 1) < text.length()) {
+//                    nextLineFirst = text.charAt(lineEnd + 1);
+//                }
+                if (!mKeepWord) {
+                    d = (mViewWidth - lineWidth) / (float) (lineLen - 1);
+                    if (lineLen > 0 && isEmpty(line.charAt(lineLen - 1))) {
+                        float f = (d / 2.0f) / (float) lineLen;
+                        d += f;
+                    }
+                } else {
+                    int clen = countEmpty(line);
+                    d = (mViewWidth - lineWidth) / clen;
+                }
+//                firstIsPoint = mKeepWord && isPoint(nextLineFirst);
+                float suffix = 0;//!firstIsPoint ? 0 :
+//                        -(paint.measureText("" + nextLineFirst) / (float) (lineLen - 1));
                 for (int j = 0; j < lineLen; j++) {
                     float cw = getPaint().measureText(line, j, j + 1);
                     canvas.drawText(line, j, j + 1, x, mLineY, paint);
-                    x += cw;
-                    // 后面是标点
-                    if ((j + 1) < (lineLen-2) && isEmpty(line.charAt(j + 1))) {
-                        x += d / 2.0f;
-                    }
-                    //当前是标点
-                    if (isEmpty(line.charAt(j))) {
-                        x += d / 2.0f;
+                    x += (cw + suffix);
+                    if (!mKeepWord) {
+                        x += d;
+                    } else {
+                        //当前是标点
+                        if (isEmpty(line.charAt(j))) {
+                            x += d;
+                        }
                     }
                 }
             } else {
@@ -301,7 +302,18 @@ class BaseTextView extends TextView implements ITextView {
      * 是否是标点/空白字符
      */
     protected boolean isEmpty(char c) {
-        return FitTextHelper.isSpace(c);
+        if (mKeepWord) {
+            //英文
+            return ' ' == c || '\t' == c;
+        }
+        //非英文
+        return isPoint(c);
+    }
+
+    protected boolean isPoint(char c) {
+        return ' ' == c || '\t' == c || '，' == c ||
+                '？' == c || '！' == c || '；' == c ||
+                '：' == c || '、' == c || ',' == c || '.' == c;
     }
 
 //    private void drawScaledText(Canvas canvas, int mViewWidth, int mLineY, int lineStart, CharSequence line, float lineWidth) {

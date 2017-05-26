@@ -1,6 +1,7 @@
 package com.kk.view;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.text.TextPaint;
 import android.text.TextUtils;
@@ -50,11 +51,15 @@ public class FitTextView extends CompactTextView {
         }
     }
 
-    protected FitTextHelper getFitTextHelper() {
+    private FitTextHelper getFitTextHelper() {
         if (mFitTextHelper == null) {
             mFitTextHelper = new FitTextHelper(this);
         }
         return mFitTextHelper;
+    }
+
+    public void setFittingText(boolean fittingText) {
+        mNeedFit = fittingText;
     }
 
     /**
@@ -140,6 +145,18 @@ public class FitTextView extends CompactTextView {
         return mOriginalText;
     }
 
+    public void setTextSizeNoDraw(int unit, float size) {
+        Context c = getContext();
+        Resources r;
+        if (c == null)
+            r = Resources.getSystem();
+        else
+            r = c.getResources();
+        if (size != getPaint().getTextSize()) {
+            getPaint().setTextSize(TypedValue.applyDimension(
+                    unit, size, r.getDisplayMetrics()));
+        }
+    }
     /**
      * 调整字体大小
      *
@@ -154,7 +171,7 @@ public class FitTextView extends CompactTextView {
         mFittingText = true;
         TextPaint oldPaint = getPaint();
         float size = getFitTextHelper().fitTextSize(oldPaint, text, mMaxTextSize, mMinTextSize);
-        super.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+        setTextSizeNoDraw(TypedValue.COMPLEX_UNIT_PX, size);
         super.setText(getFitTextHelper().getLineBreaks(text, getPaint()));
         mFittingText = false;
     }

@@ -8,8 +8,7 @@
         <attr name="needScaleText" format="boolean"/>
         <attr name="minScaleX" format="float"/>
     </declare-styleable>
-    <declare-styleable name="BaseTextView">
-        <attr name="lineEndNoSpace" format="boolean"/>
+    <declare-styleable name="JustifyTextView">
         <attr name="justify" format="boolean"/>
     </declare-styleable>
 </resources>

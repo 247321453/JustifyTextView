@@ -21,7 +21,6 @@ import java.util.List;
 public class FitTextHelper {
     protected static final float LIMIT = 0.001f;// 误差
     private static final boolean LastNoSpace = false;
-    protected ITextView textView;
 
     //region space list
     public final static List<Character> sSpcaeList = new ArrayList<>();
@@ -67,6 +66,8 @@ public class FitTextHelper {
         sSpcaeList.add('+');
         sSpcaeList.add('-');
         sSpcaeList.add('·');
+        sSpcaeList.add('“');
+        sSpcaeList.add('”');
         sSpcaeList.add('●');
         sSpcaeList.add('【');
         sSpcaeList.add('】');
@@ -75,12 +76,14 @@ public class FitTextHelper {
         sSpcaeList.add('『');
         sSpcaeList.add('』');
         sSpcaeList.add('／');
+        sSpcaeList.add('=');
     }
     //endregion
 
-    protected volatile boolean mFittingText = false;
+    protected boolean mFittingText = false;
+    private JustifyTextView textView;
 
-    public FitTextHelper(ITextView textView) {
+    public FitTextHelper(JustifyTextView textView) {
         this.textView = textView;
     }
 
@@ -93,11 +96,8 @@ public class FitTextHelper {
      */
     public static boolean isSingleLine(TextView textView) {
         if (textView == null) return false;
-        if (textView instanceof BaseTextView) {
-            return ((BaseTextView) textView).isSingleLine();
-        }
-        if (textView == null) {
-            return false;
+        if (textView instanceof JustifyTextView) {
+            return ((JustifyTextView) textView).isSingleLine();
         }
         int type = textView.getInputType();
         return (type & EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE) == EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE;
@@ -117,7 +117,7 @@ public class FitTextHelper {
      * @return 文本框的当前最大行数
      */
     protected int getMaxLineCount() {
-        float vspace = textView.getTextLineHeight();
+        float vspace = textView.getLineHeight();
         float height = textView.getTextHeight();
         return (int) (height / vspace);
     }
@@ -145,7 +145,7 @@ public class FitTextHelper {
      * @return 文本布局
      */
     public StaticLayout getStaticLayout(CharSequence text, TextPaint paint) {
-        return getStaticLayout(textView.getTextView(), text, paint);
+        return getStaticLayout(textView, text, paint);
     }
 
     /**
@@ -155,8 +155,8 @@ public class FitTextHelper {
      * @return 文本布局
      */
     public static StaticLayout getStaticLayout(TextView textView, CharSequence text, TextPaint paint) {
-        if (textView instanceof FitTextView) {
-            FitTextView fitTextView = (FitTextView) textView;
+        if (textView instanceof JustifyTextView) {
+            JustifyTextView fitTextView = (JustifyTextView) textView;
             return new StaticLayout(text, paint, getTextWidth(textView),
                     getLayoutAlignment(fitTextView), fitTextView.getLineSpacingMultiplierCompat(),
                     fitTextView.getLineSpacingExtraCompat(), fitTextView.getIncludeFontPaddingCompat());
@@ -425,12 +425,10 @@ public class FitTextHelper {
                         alignment = Layout.Alignment.ALIGN_OPPOSITE;
                         break;
                     case Gravity.LEFT:
-                        alignment = (textView.getLayoutDirection() == TextView.LAYOUT_DIRECTION_RTL) ? Layout.Alignment.ALIGN_OPPOSITE
-                                : Layout.Alignment.ALIGN_NORMAL;
+                        alignment = Layout.Alignment.ALIGN_LEFT;
                         break;
                     case Gravity.RIGHT:
-                        alignment = (textView.getLayoutDirection() == TextView.LAYOUT_DIRECTION_RTL) ? Layout.Alignment.ALIGN_NORMAL
-                                : Layout.Alignment.ALIGN_OPPOSITE;
+                        alignment = Layout.Alignment.ALIGN_RIGHT;
                         break;
                     case Gravity.CENTER_HORIZONTAL:
                         alignment = Layout.Alignment.ALIGN_CENTER;
@@ -450,13 +448,16 @@ public class FitTextHelper {
                 alignment = Layout.Alignment.ALIGN_CENTER;
                 break;
             case TextView.TEXT_ALIGNMENT_VIEW_START:
-                alignment = Layout.Alignment.ALIGN_NORMAL;
+                alignment = (textView.getLayoutDirection() == TextView.LAYOUT_DIRECTION_RTL) ?
+                        Layout.Alignment.ALIGN_RIGHT : Layout.Alignment.ALIGN_LEFT;
                 break;
             case TextView.TEXT_ALIGNMENT_VIEW_END:
-                alignment = Layout.Alignment.ALIGN_OPPOSITE;
+                alignment = (textView.getLayoutDirection() == TextView.LAYOUT_DIRECTION_RTL) ?
+                        Layout.Alignment.ALIGN_LEFT : Layout.Alignment.ALIGN_RIGHT;
                 break;
             case TextView.TEXT_ALIGNMENT_INHERIT:
-                //
+                // This should never happen as we have already resolved the text alignment
+                // but better safe than sorry so we just fall through
             default:
                 alignment = Layout.Alignment.ALIGN_NORMAL;
                 break;
