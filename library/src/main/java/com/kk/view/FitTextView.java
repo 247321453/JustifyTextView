@@ -41,11 +41,11 @@ public class FitTextView extends CompactTextView {
         mOriginalTextSize = getTextSize();
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, new int[]{
-                    R.attr.ftMaxTextSize,
-                    R.attr.ftMinTextSize,
+                    R.styleable.FitTextView_ftMaxTextSize,
+                    R.styleable.FitTextView_ftMinTextSize,
                     });
-            mMaxTextSize = a.getDimension(R.attr.ftMaxTextSize, mOriginalTextSize * 2.0f);
-            mMinTextSize = a.getDimension(R.attr.ftMinTextSize, mOriginalTextSize / 2.0f);
+            mMaxTextSize = a.getDimensionPixelSize(R.styleable.FitTextView_ftMaxTextSize, (int) (mOriginalTextSize * 2.0f));
+            mMinTextSize = a.getDimensionPixelSize(R.styleable.FitTextView_ftMinTextSize, (int) (mOriginalTextSize / 2.0f));
             a.recycle();
         } else {
             mMinTextSize = mOriginalTextSize / 2.0f;
@@ -171,7 +171,7 @@ public class FitTextView extends CompactTextView {
             return;
         }
         if (mMeasured || mFittingText) {
-            mMeasured = false;
+//            mMeasured = false;
             return;
         }
         mFittingText = true;
