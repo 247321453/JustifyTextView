@@ -10,10 +10,13 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
 
 import com.kk.justifytextview.R;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /***
@@ -21,8 +24,8 @@ import java.lang.reflect.Method;
  */
 public class JustifyTextView extends TextView {
     protected boolean mSingleLine = false;
-    protected boolean mIncludeFontPadding = true;
-    protected float mLineSpacingMult = 1;
+    protected boolean mIncludeFontPadding = false;
+    protected float mLineSpacingMult = 1.0f;
     protected float mLineSpacingAdd = 0;
     protected int mMaxLines = Integer.MAX_VALUE;
     protected boolean mJustify = false;
@@ -32,6 +35,7 @@ public class JustifyTextView extends TextView {
      */
     protected boolean mKeepWord = true;
     private Method assumeLayout;
+    private Method getLayoutAlignment;
 
     public JustifyTextView(Context context) {
         this(context, null);
@@ -47,26 +51,19 @@ public class JustifyTextView extends TextView {
             assumeLayout = TextView.class.getDeclaredMethod("assumeLayout");
             assumeLayout.setAccessible(true);
         } catch (Exception e) {
+            //ignore
+        }
+        try {
+            getLayoutAlignment = TextView.class.getDeclaredMethod("getLayoutAlignment");
+            getLayoutAlignment.setAccessible(true);
+        } catch (Exception e) {
+//ignore
         }
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, new int[]{
-                    android.R.styleable.TextView_includeFontPadding,
-                    android.R.styleable.TextView_lineSpacingMultiplier,
-                    android.R.styleable.TextView_lineSpacingExtra,
-                    android.R.styleable.TextView_maxLines,
-                    android.R.styleable.TextView_singleLine,
                     R.styleable.JustifyTextView_justify
             });
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                mIncludeFontPadding = a.getBoolean(
-                        android.R.styleable.TextView_includeFontPadding, mIncludeFontPadding);
-                mLineSpacingMult = a.getFloat(
-                        android.R.styleable.TextView_lineSpacingMultiplier, mLineSpacingMult);
-                mLineSpacingAdd = a.getDimensionPixelSize(
-                        android.R.styleable.TextView_lineSpacingExtra, (int) mLineSpacingAdd);
-                mMaxLines = a.getInteger(android.R.styleable.TextView_maxLines, mMaxLines);
-            }
-            mSingleLine = a.getBoolean(android.R.styleable.TextView_singleLine, mSingleLine);
+            mSingleLine = isSingleLineCompat();
             mJustify = a.getBoolean(R.styleable.JustifyTextView_justify, mJustify);
             a.recycle();
         }
@@ -149,6 +146,18 @@ public class JustifyTextView extends TextView {
         mSingleLine = singleLine;
     }
 
+    public boolean isSingleLineCompat() {
+        int type = getInputType();
+        if ((type & EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE) == EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isSingleLine() {
+        return mSingleLine;
+    }
+
     public int getTextWidth() {
         return getMeasuredWidth() - getCompoundPaddingLeft()
                 - getCompoundPaddingRight();
@@ -181,10 +190,6 @@ public class JustifyTextView extends TextView {
         return getPaint().getTextSkewX() != 0f;
     }
 
-    public boolean isSingleLine() {
-        return mSingleLine;
-    }
-
     @Override
     protected void onDraw(Canvas canvas) {
         if (!mJustify || mSingleLine) {
@@ -192,6 +197,17 @@ public class JustifyTextView extends TextView {
             return;
         }
         forceDraw(canvas);
+    }
+
+    public Layout.Alignment getLayoutAlignmentCompat() {
+        if (getLayoutAlignment != null) {
+            try {
+                return (Layout.Alignment) getLayoutAlignment.invoke(this);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return FitTextHelper.getLayoutAlignment(this);
     }
 
     protected void forceDraw(Canvas canvas) {
@@ -240,7 +256,7 @@ public class JustifyTextView extends TextView {
             }
             float lineWidth = getPaint().measureText(text, lineStart, lineEnd);
             boolean needScale = i < (count - 1) && (needScale(text.subSequence(lineEnd - 1, lineEnd)));
-            if ((mKeepWord && needScale) || (!mKeepWord && mViewWidth > lineWidth && lineWidth >= (mViewWidth - wordW*1.5f))) {
+            if ((mKeepWord && needScale) || (!mKeepWord && mViewWidth > lineWidth && lineWidth >= (mViewWidth - wordW * 1.5f))) {
                 //标点数
                 final int lineLen = line.length();
                 float d;

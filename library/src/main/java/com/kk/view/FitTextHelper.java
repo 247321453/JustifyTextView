@@ -158,7 +158,7 @@ public class FitTextHelper {
         if (textView instanceof JustifyTextView) {
             JustifyTextView fitTextView = (JustifyTextView) textView;
             return new StaticLayout(text, paint, getTextWidth(textView),
-                    getLayoutAlignment(fitTextView), fitTextView.getLineSpacingMultiplierCompat(),
+                    fitTextView.getLayoutAlignmentCompat(), fitTextView.getLineSpacingMultiplierCompat(),
                     fitTextView.getLineSpacingExtraCompat(), fitTextView.getIncludeFontPaddingCompat());
         } else {
             if (Build.VERSION.SDK_INT <= 16) {
@@ -425,10 +425,10 @@ public class FitTextHelper {
                         alignment = Layout.Alignment.ALIGN_OPPOSITE;
                         break;
                     case Gravity.LEFT:
-                        alignment = Layout.Alignment.ALIGN_LEFT;
+                        alignment = Layout.Alignment.ALIGN_NORMAL;
                         break;
                     case Gravity.RIGHT:
-                        alignment = Layout.Alignment.ALIGN_RIGHT;
+                        alignment = Layout.Alignment.ALIGN_OPPOSITE;
                         break;
                     case Gravity.CENTER_HORIZONTAL:
                         alignment = Layout.Alignment.ALIGN_CENTER;
@@ -449,11 +449,11 @@ public class FitTextHelper {
                 break;
             case TextView.TEXT_ALIGNMENT_VIEW_START:
                 alignment = (textView.getLayoutDirection() == TextView.LAYOUT_DIRECTION_RTL) ?
-                        Layout.Alignment.ALIGN_RIGHT : Layout.Alignment.ALIGN_LEFT;
+                        Layout.Alignment.ALIGN_OPPOSITE : Layout.Alignment.ALIGN_NORMAL;
                 break;
             case TextView.TEXT_ALIGNMENT_VIEW_END:
                 alignment = (textView.getLayoutDirection() == TextView.LAYOUT_DIRECTION_RTL) ?
-                        Layout.Alignment.ALIGN_LEFT : Layout.Alignment.ALIGN_RIGHT;
+                        Layout.Alignment.ALIGN_NORMAL : Layout.Alignment.ALIGN_OPPOSITE;
                 break;
             case TextView.TEXT_ALIGNMENT_INHERIT:
                 // This should never happen as we have already resolved the text alignment
@@ -464,5 +464,4 @@ public class FitTextHelper {
         }
         return alignment;
     }
-
 }
