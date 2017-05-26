@@ -191,7 +191,6 @@ public class JustifyTextView extends TextView {
             super.onDraw(canvas);
             return;
         }
-        Log.d("kk", "onDraw");
         forceDraw(canvas);
     }
 

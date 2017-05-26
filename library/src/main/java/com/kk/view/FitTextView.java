@@ -3,16 +3,18 @@ package com.kk.view;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Canvas;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 
 import com.kk.justifytextview.R;
 
 public class FitTextView extends CompactTextView {
 
-    private boolean mMeasured = false;
+    private boolean mMeasured = true;
     /**
      * 不需要调整大小
      */
@@ -41,13 +43,13 @@ public class FitTextView extends CompactTextView {
             TypedArray a = context.obtainStyledAttributes(attrs, new int[]{
                     R.attr.ftMaxTextSize,
                     R.attr.ftMinTextSize,
-            });
-            mMaxTextSize = a.getDimension(0, mOriginalTextSize * 2.0f);
-            mMinTextSize = a.getDimension(1, mOriginalTextSize / 2.0f);
+                    });
+            mMaxTextSize = a.getDimension(R.attr.ftMaxTextSize, mOriginalTextSize * 2.0f);
+            mMinTextSize = a.getDimension(R.attr.ftMinTextSize, mOriginalTextSize / 2.0f);
             a.recycle();
         } else {
-            mMinTextSize = mOriginalTextSize;
-            mMaxTextSize = mOriginalTextSize;
+            mMinTextSize = mOriginalTextSize / 2.0f;
+            mMaxTextSize = mOriginalTextSize * 2.0f;
         }
     }
 
@@ -56,10 +58,6 @@ public class FitTextView extends CompactTextView {
             mFitTextHelper = new FitTextHelper(this);
         }
         return mFitTextHelper;
-    }
-
-    public void setFittingText(boolean fittingText) {
-        mNeedFit = fittingText;
     }
 
     /**
@@ -116,6 +114,11 @@ public class FitTextView extends CompactTextView {
         return mOriginalTextSize;
     }
 
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        Log.d("kk", this + "::onDraw");
+    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -127,9 +130,9 @@ public class FitTextView extends CompactTextView {
         if (widthMode == MeasureSpec.UNSPECIFIED
                 && heightMode == MeasureSpec.UNSPECIFIED) {
             super.setTextSize(TypedValue.COMPLEX_UNIT_PX, mOriginalTextSize);
-            mMeasured = false;
-        } else {
             mMeasured = true;
+        } else {
+            mMeasured = false;
             fitText(getOriginalText());
         }
     }
@@ -145,7 +148,7 @@ public class FitTextView extends CompactTextView {
         return mOriginalText;
     }
 
-    public void setTextSizeNoDraw(int unit, float size) {
+    private void setTextSizeNoDraw(int unit, float size) {
         Context c = getContext();
         Resources r;
         if (c == null)
@@ -157,17 +160,20 @@ public class FitTextView extends CompactTextView {
                     unit, size, r.getDisplayMetrics()));
         }
     }
+
     /**
      * 调整字体大小
      *
      * @param text 内容
      */
     protected void fitText(CharSequence text) {
-        if (!mNeedFit) {
+        if (!mNeedFit || mSingleLine || TextUtils.isEmpty(text)) {
             return;
         }
-        if (!mMeasured || mFittingText || mSingleLine || TextUtils.isEmpty(text))
+        if (mMeasured || mFittingText) {
+            mMeasured = false;
             return;
+        }
         mFittingText = true;
         TextPaint oldPaint = getPaint();
         float size = getFitTextHelper().fitTextSize(oldPaint, text, mMaxTextSize, mMinTextSize);
