@@ -78,7 +78,7 @@ class FitTextHelper {
     }
 
     /**
-     * 拆入换行符，解决中英文的换行问题
+     * 拆入空格，解决中英文的换行问题
      *
      * @param text  内容
      * @param paint 画笔
@@ -106,7 +106,7 @@ class FitTextHelper {
                     if (end < length) {
                         CharSequence c2 = text.subSequence(end - 1, end);
                         if (!TextUtils.equals(c2, "\n"))
-                            ssb.append('\n');
+                            ssb.append(' ');
                     }
                 } else if (lw == width) {
                     ssb.append(text, start, end);
@@ -114,7 +114,7 @@ class FitTextHelper {
                     if (end < length) {
                         CharSequence c2 = text.subSequence(end, end + 1);
                         if (!TextUtils.equals(c2, "\n"))
-                            ssb.append('\n');
+                            ssb.append(' ');
                     }
                 } else if (end == length) {
                     // 已经是最后一个字符

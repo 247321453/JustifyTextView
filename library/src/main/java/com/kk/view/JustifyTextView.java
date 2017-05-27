@@ -10,6 +10,7 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
@@ -271,10 +272,23 @@ public class JustifyTextView extends TextView {
                 getLineSpacingExtraCompat(), getIncludeFontPaddingCompat());
     }
 
+    private CharSequence trim(CharSequence text) {
+        final int count = text.length();
+        int len = count;
+        int st = 0;
+
+        while ((st < len) && (text.charAt(st) <= ' ')) {
+            st++;
+        }
+        while ((st < len) && (text.charAt(len - 1) <= ' ')) {
+            len--;
+        }
+        return ((st > 0) || (len < count)) ? text.subSequence(st, len) : text;
+    }
+
     protected void forceDraw(Canvas canvas) {
         TextPaint paint = getPaint();
         float mViewWidth = getTextWidth();
-        final float wordW = paint.measureText("aa");
         if (isItalicText()) {
             float letterW = paint.measureText("a");
             mViewWidth -= letterW;
@@ -295,7 +309,6 @@ public class JustifyTextView extends TextView {
             //手工构造
             layout = createLayout(text, paint);
         }
-
         int count = layout.getLineCount();
         for (int i = 0; i < count; i++) {
             //每一行
@@ -310,29 +323,28 @@ public class JustifyTextView extends TextView {
             if (line.length() == 0) {
                 continue;
             }
+            //最后一个是换行符
+            char end = line.charAt(line.length() - 1);
+            if (end == '\n') {
+                canvas.drawText(line, 0, line.length(), lineX, lineY, paint);
+                continue;
+            }
+            if (i == (count - 1)) {
+                //最后一行
+                canvas.drawText(line, 0, line.length(), lineX, lineY, paint);
+                continue;
+            }
             //行首尾去掉空格
-            if (TextUtils.equals(line.subSequence(line.length() - 1, line.length()), " ")) {
-                line = line.subSequence(0, line.length() - 1);
-            }
-            if (TextUtils.equals(line.subSequence(0, 1), " ")) {
-                line = line.subSequence(1, line.length() - 1);
-            }
+            line = trim(line);
+            final int lineLen = line.length();
             //当前行字符串的宽度
-            float lineWidth = getPaint().measureText(text, lineStart, lineEnd);
-
-            boolean needJustify = i < (count - 1) && (needScale(text.subSequence(lineEnd - 1, lineEnd)));
-            if ((mKeepWord && needJustify) || (!mKeepWord && mViewWidth > lineWidth && lineWidth >= (mViewWidth - wordW * 1.5f))) {
-                //标点数
-                final int lineLen = line.length();
+            float lineWidth = getPaint().measureText(line, 0, line.length());
+            if (mViewWidth > lineWidth) {
                 //修正多出的空白
                 float d;
                 if (!mKeepWord) {
                     //非英文模式，把空白的地方的宽度分到全部字符（除首尾2个字符）
                     d = (mViewWidth - lineWidth) / (float) (lineLen - 1);
-                    if (lineLen > 0 && isEmpty(line.charAt(lineLen - 1))) {
-                        float f = (d / 2.0f) / (float) lineLen;
-                        d += f;
-                    }
                 } else {
                     //英文模式，把空白的地方的宽度，分到标点字符
                     int clen = countEmpty(line);
@@ -353,7 +365,7 @@ public class JustifyTextView extends TextView {
                     }
                 }
             } else {
-                canvas.drawText(line, 0, line.length(), lineX, lineY, paint);
+                canvas.drawText(line, 0, lineLen, lineX, lineY, paint);
             }
         }
     }
@@ -393,13 +405,18 @@ public class JustifyTextView extends TextView {
                 '：' == c || '、' == c || ',' == c || '.' == c;
     }
 
-    /**
-     * 是否需要两端对齐
-     *
-     * @param end 结束字符
-     */
-    private boolean needScale(CharSequence end) {
-        return TextUtils.equals(end, " ");// || !TextUtils.equals(end, "\n");
+
+    private String debug;
+
+    public void setDebug(String debug) {
+        this.debug = debug;
     }
 
+    @Override
+    public String toString() {
+        if (!TextUtils.isEmpty(debug)) {
+            return getClass().getSimpleName() + ":" + debug;
+        }
+        return super.toString();
+    }
 }

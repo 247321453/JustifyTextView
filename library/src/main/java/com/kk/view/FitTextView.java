@@ -22,6 +22,7 @@ public class FitTextView extends CompactTextView {
     protected float mOriginalTextSize = 0;
     private float mMinTextSize, mMaxTextSize;
     protected CharSequence mOriginalText;
+    protected BufferType mBufferType;
     /**
      * 正在调整字体大小
      */
@@ -115,12 +116,6 @@ public class FitTextView extends CompactTextView {
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        Log.d("kk", this + "::onDraw");
-    }
-
-    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
@@ -140,7 +135,9 @@ public class FitTextView extends CompactTextView {
     @Override
     public void setText(CharSequence text, BufferType type) {
         mOriginalText = text;
+        mBufferType = type;
         super.setText(text, type);
+        resetMask();
         fitText(text);
     }
 
@@ -161,6 +158,10 @@ public class FitTextView extends CompactTextView {
         }
     }
 
+    private void resetMask() {
+        mMeasured = false;
+    }
+
     /**
      * 调整字体大小
      *
@@ -178,7 +179,7 @@ public class FitTextView extends CompactTextView {
         TextPaint oldPaint = getPaint();
         float size = getFitTextHelper().fitTextSize(oldPaint, text, mMaxTextSize, mMinTextSize);
         setTextSizeNoDraw(TypedValue.COMPLEX_UNIT_PX, size);
-        super.setText(getFitTextHelper().getLineBreaks(text, getPaint()));
+        super.setText(getFitTextHelper().getLineBreaks(text, getPaint()), mBufferType);
         mFittingText = false;
     }
 }
