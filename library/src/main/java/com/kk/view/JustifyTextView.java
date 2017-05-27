@@ -6,17 +6,16 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.os.Build;
 import android.text.Layout;
+import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
 
 import com.kk.justifytextview.R;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /***
@@ -28,12 +27,16 @@ public class JustifyTextView extends TextView {
     protected float mLineSpacingMult = 1.0f;
     protected float mLineSpacingAdd = 0;
     protected int mMaxLines = Integer.MAX_VALUE;
+    /**
+     * 两端对齐
+     */
     protected boolean mJustify = false;
 
     /***
-     * 不拆分单词
+     * 不拆分单词，英文模式
      */
     protected boolean mKeepWord = true;
+
     private Method assumeLayout;
     private Method getLayoutAlignment;
 
@@ -193,6 +196,7 @@ public class JustifyTextView extends TextView {
     @Override
     protected void onDraw(Canvas canvas) {
         if (!mJustify || mSingleLine) {
+            //单行，或者不开启两端对齐
             super.onDraw(canvas);
             return;
         }
@@ -207,7 +211,64 @@ public class JustifyTextView extends TextView {
                 e.printStackTrace();
             }
         }
-        return FitTextHelper.getLayoutAlignment(this);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            return Layout.Alignment.ALIGN_NORMAL;
+        }
+        Layout.Alignment alignment;
+        switch (getTextAlignment()) {
+            case TEXT_ALIGNMENT_GRAVITY:
+                switch (getGravity() & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK) {
+                    case Gravity.START:
+                        alignment = Layout.Alignment.ALIGN_NORMAL;
+                        break;
+                    case Gravity.END:
+                        alignment = Layout.Alignment.ALIGN_OPPOSITE;
+                        break;
+                    case Gravity.LEFT:
+                        alignment = Layout.Alignment.ALIGN_NORMAL;
+                        break;
+                    case Gravity.RIGHT:
+                        alignment = Layout.Alignment.ALIGN_OPPOSITE;
+                        break;
+                    case Gravity.CENTER_HORIZONTAL:
+                        alignment = Layout.Alignment.ALIGN_CENTER;
+                        break;
+                    default:
+                        alignment = Layout.Alignment.ALIGN_NORMAL;
+                        break;
+                }
+                break;
+            case TextView.TEXT_ALIGNMENT_TEXT_START:
+                alignment = Layout.Alignment.ALIGN_NORMAL;
+                break;
+            case TextView.TEXT_ALIGNMENT_TEXT_END:
+                alignment = Layout.Alignment.ALIGN_OPPOSITE;
+                break;
+            case TextView.TEXT_ALIGNMENT_CENTER:
+                alignment = Layout.Alignment.ALIGN_CENTER;
+                break;
+            case TextView.TEXT_ALIGNMENT_VIEW_START:
+                alignment = (getLayoutDirection() == TextView.LAYOUT_DIRECTION_RTL) ?
+                        Layout.Alignment.ALIGN_OPPOSITE : Layout.Alignment.ALIGN_NORMAL;
+                break;
+            case TextView.TEXT_ALIGNMENT_VIEW_END:
+                alignment = (getLayoutDirection() == TextView.LAYOUT_DIRECTION_RTL) ?
+                        Layout.Alignment.ALIGN_NORMAL : Layout.Alignment.ALIGN_OPPOSITE;
+                break;
+            case TextView.TEXT_ALIGNMENT_INHERIT:
+                // This should never happen as we have already resolved the text alignment
+                // but better safe than sorry so we just fall through
+            default:
+                alignment = Layout.Alignment.ALIGN_NORMAL;
+                break;
+        }
+        return alignment;
+    }
+
+    protected StaticLayout createLayout(CharSequence text, TextPaint paint) {
+        return new StaticLayout(text, paint, getTextWidth(),
+                getLayoutAlignmentCompat(), getLineSpacingMultiplierCompat(),
+                getLineSpacingExtraCompat(), getIncludeFontPaddingCompat());
     }
 
     protected void forceDraw(Canvas canvas) {
@@ -219,8 +280,10 @@ public class JustifyTextView extends TextView {
             mViewWidth -= letterW;
         }
         CharSequence text = getText();
+        //文本绘制容器，里面处理自动换行
         Layout layout = getLayout();
         if (layout == null && assumeLayout != null) {
+            //反射获取
             try {
                 assumeLayout.invoke(this);
                 layout = getLayout();
@@ -229,69 +292,68 @@ public class JustifyTextView extends TextView {
             }
         }
         if (layout == null) {
-            layout = FitTextHelper.getStaticLayout(this, getText(), getPaint());
+            //手工构造
+            layout = createLayout(text, paint);
         }
 
         int count = layout.getLineCount();
-//        int mTop = layout.getTopPadding();
-//        boolean firstIsPoint = false;
         for (int i = 0; i < count; i++) {
+            //每一行
             int lineStart = layout.getLineStart(i);
-//            if (firstIsPoint) {
-//                lineStart++;
-//            }
             int lineEnd = layout.getLineEnd(i);
             int lbottom = layout.getLineBottom(i);
-            float x = layout.getLineLeft(i);
-            int mLineY = lbottom - layout.getLineDescent(i);
+            //每行的开始的绘制坐标
+            float lineX = layout.getLineLeft(i);
+            int lineY = lbottom - layout.getLineDescent(i);
+            //每行的字符串
             CharSequence line = text.subSequence(lineStart, lineEnd);
             if (line.length() == 0) {
                 continue;
             }
+            //行首尾去掉空格
             if (TextUtils.equals(line.subSequence(line.length() - 1, line.length()), " ")) {
                 line = line.subSequence(0, line.length() - 1);
             }
             if (TextUtils.equals(line.subSequence(0, 1), " ")) {
                 line = line.subSequence(1, line.length() - 1);
             }
+            //当前行字符串的宽度
             float lineWidth = getPaint().measureText(text, lineStart, lineEnd);
-            boolean needScale = i < (count - 1) && (needScale(text.subSequence(lineEnd - 1, lineEnd)));
-            if ((mKeepWord && needScale) || (!mKeepWord && mViewWidth > lineWidth && lineWidth >= (mViewWidth - wordW * 1.5f))) {
+
+            boolean needJustify = i < (count - 1) && (needScale(text.subSequence(lineEnd - 1, lineEnd)));
+            if ((mKeepWord && needJustify) || (!mKeepWord && mViewWidth > lineWidth && lineWidth >= (mViewWidth - wordW * 1.5f))) {
                 //标点数
                 final int lineLen = line.length();
+                //修正多出的空白
                 float d;
-//                char nextLineFirst = ' ';
-//                if (mKeepWord && (lineEnd + 1) < text.length()) {
-//                    nextLineFirst = text.charAt(lineEnd + 1);
-//                }
                 if (!mKeepWord) {
+                    //非英文模式，把空白的地方的宽度分到全部字符（除首尾2个字符）
                     d = (mViewWidth - lineWidth) / (float) (lineLen - 1);
                     if (lineLen > 0 && isEmpty(line.charAt(lineLen - 1))) {
                         float f = (d / 2.0f) / (float) lineLen;
                         d += f;
                     }
                 } else {
+                    //英文模式，把空白的地方的宽度，分到标点字符
                     int clen = countEmpty(line);
                     d = (mViewWidth - lineWidth) / clen;
                 }
-//                firstIsPoint = mKeepWord && isPoint(nextLineFirst);
-                float suffix = 0;//!firstIsPoint ? 0 :
-//                        -(paint.measureText("" + nextLineFirst) / (float) (lineLen - 1));
                 for (int j = 0; j < lineLen; j++) {
+                    //字宽
                     float cw = getPaint().measureText(line, j, j + 1);
-                    canvas.drawText(line, j, j + 1, x, mLineY, paint);
-                    x += (cw + suffix);
+                    canvas.drawText(line, j, j + 1, lineX, lineY, paint);
+                    lineX += cw;
                     if (!mKeepWord) {
-                        x += d;
+                        lineX += d;
                     } else {
                         //当前是标点
                         if (isEmpty(line.charAt(j))) {
-                            x += d;
+                            lineX += d;
                         }
                     }
                 }
             } else {
-                canvas.drawText(line, 0, line.length(), x, mLineY, paint);
+                canvas.drawText(line, 0, line.length(), lineX, lineY, paint);
             }
         }
     }
@@ -302,7 +364,7 @@ public class JustifyTextView extends TextView {
      * @param text 内容
      * @return 数量
      */
-    protected int countEmpty(CharSequence text) {
+    private int countEmpty(CharSequence text) {
         int len = text.length();
         int count = 0;
         for (int i = 0; i < len; i++) {
@@ -316,7 +378,7 @@ public class JustifyTextView extends TextView {
     /**
      * 是否是标点/空白字符
      */
-    protected boolean isEmpty(char c) {
+    private boolean isEmpty(char c) {
         if (mKeepWord) {
             //英文
             return ' ' == c || '\t' == c;
@@ -325,42 +387,18 @@ public class JustifyTextView extends TextView {
         return isPoint(c);
     }
 
-    protected boolean isPoint(char c) {
+    private boolean isPoint(char c) {
         return ' ' == c || '\t' == c || '，' == c ||
                 '？' == c || '！' == c || '；' == c ||
                 '：' == c || '、' == c || ',' == c || '.' == c;
     }
-
-//    private void drawScaledText(Canvas canvas, int mViewWidth, int mLineY, int lineStart, CharSequence line, float lineWidth) {
-//        float x = 0;
-//        if (isFirstLineOfParagraph(lineStart, line)) {
-//            String blanks = "  ";
-//            canvas.drawText(blanks, x, mLineY, getPaint());
-//            float bw = StaticLayout.getDesiredWidth(blanks, getPaint());
-//            x += bw;
-//
-//            line = line.subSequence(3, line.length() - 3);
-//        }
-//
-//        float d = (mViewWidth - lineWidth) / line.length() - 1;
-//        for (int i = 0; i < line.length(); i++) {
-//            String c = String.valueOf(line.charAt(i));
-//            float cw = StaticLayout.getDesiredWidth(c, getPaint());
-//            canvas.drawText(c, x, mLineY, getPaint());
-//            x += cw + d;
-//        }
-//    }
-//
-//    private boolean isFirstLineOfParagraph(int lineStart, CharSequence line) {
-//        return line.length() > 3 && line.charAt(0) == ' ' && line.charAt(1) == ' ';
-//    }
 
     /**
      * 是否需要两端对齐
      *
      * @param end 结束字符
      */
-    protected boolean needScale(CharSequence end) {
+    private boolean needScale(CharSequence end) {
         return TextUtils.equals(end, " ");// || !TextUtils.equals(end, "\n");
     }
 

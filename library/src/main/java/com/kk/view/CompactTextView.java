@@ -61,7 +61,7 @@ public class CompactTextView extends JustifyTextView {
     @Override
     public void setText(CharSequence text, BufferType type) {
         if (text != null && mNeedScaleText && mSingleLine) {
-            // 单行，并且设置宽度
+            // 单行，使字变窄，减少行宽度
             float textWidth = getTextWidth();
             if (textWidth > 0) {
                 TextPaint textPaint = getPaint();
