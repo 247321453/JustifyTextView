@@ -10,7 +10,11 @@ buildscript {
         // in the individual module build.gradle files
     }
 }
-
+ext {
+    compileSdkVersion = 24
+    buildToolsVersion = compileSdkVersion+".0.3"
+    supportVersion = 24+".2.1"
+}
 allprojects {
     repositories {
         jcenter()
