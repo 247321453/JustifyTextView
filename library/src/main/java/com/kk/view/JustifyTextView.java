@@ -1,5 +1,6 @@
 package com.kk.view;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -22,6 +23,7 @@ import java.lang.reflect.Method;
 /***
  * 两端对齐
  */
+@SuppressLint("AppCompatCustomView")
 public class JustifyTextView extends TextView {
     protected boolean mSingleLine = false;
     protected boolean mIncludeFontPadding = false;
