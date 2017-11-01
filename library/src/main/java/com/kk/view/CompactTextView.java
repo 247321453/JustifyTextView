@@ -2,6 +2,7 @@ package com.kk.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Canvas;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 
@@ -12,8 +13,9 @@ import com.kk.justifytextview.R;
  */
 public class CompactTextView extends JustifyTextView {
     protected boolean mNeedScaleText = false;
-    private final static float MIN_SCALEX = 0.25f;
+    private final static float MIN_SCALEX = 0.10f;
     protected final float mMinScaleX;
+    private CharSequence mText;
 //    protected boolean SUPER_DRAW = false;
 
     public CompactTextView(Context context) {
@@ -60,19 +62,25 @@ public class CompactTextView extends JustifyTextView {
 
     @Override
     public void setText(CharSequence text, BufferType type) {
-        if (text != null && mNeedScaleText && mSingleLine) {
+        mText = text;
+        super.setText(text, type);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        if (mText != null && mNeedScaleText && mSingleLine) {
             // 单行，使字变窄，减少行宽度
             float textWidth = getTextWidth();
             if (textWidth > 0) {
                 TextPaint textPaint = getPaint();
                 textPaint.setTextScaleX(1.0f);
-                float width = textPaint.measureText(text, 0, text.length());
+                float width = textPaint.measureText(mText+"a", 0, mText.length()+1);
                 if (width > textWidth) {
                     float s = Math.max(mMinScaleX, textWidth / width);
                     textPaint.setTextScaleX(s);
                 }
             }
         }
-        super.setText(text, type);
+        super.onDraw(canvas);
     }
 }
